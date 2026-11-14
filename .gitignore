@@ -1,0 +1,9 @@
+# Local planning brief. Stay on disk for the team; never commit it.
+BRIEF.md
+
+# Python environment, bytecode, and secrets
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
