@@ -40,6 +40,12 @@ class Clue(BaseModel):
     image_url: str | None = None
 
 
+class CluesResponse(BaseModel):
+    """The four map cards for one farm."""
+
+    clues: list[Clue]
+
+
 class Plan(BaseModel):
     """A three-year rotation, its score, and the reasons behind both."""
 
