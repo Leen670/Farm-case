@@ -19,7 +19,8 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.7"
-      # Comma-separated extra origins. *.vercel.app is already allowed in code.
-      # Replace * with the real site later, for example https://farm-case.vercel.app
+      # Comma-separated extra origins. The code also allows localhost,
+      # html-classic.itch.zone, html.itch.zone, any *.itch.io page, and
+      # any *.vercel.app site. Replace * with the real site later.
       - key: CORS_ORIGINS
         value: "http://localhost:5173,http://127.0.0.1:5173"

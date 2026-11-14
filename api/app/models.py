@@ -106,3 +106,18 @@ class SimpleCase(BaseModel):
     recommended: SimplePlan
     alternatives: list[SimplePlan]
     demo_data: bool
+
+
+class WorldMap(BaseModel):
+    """A north-up world picture for the farm picker.
+
+    image_url is the NASA GIBS picture. proxy_path is that same picture
+    through this API, for a WebGL build that cannot read GIBS directly.
+    A click is pixels from the left and from the top:
+    lon = x / width * 360 - 180, lat = 90 - y / height * 180.
+    """
+
+    image_url: str
+    width: int
+    height: int
+    proxy_path: str

@@ -23,6 +23,14 @@ from urllib.parse import urlencode
 
 WMS_ENDPOINT = "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi"
 
+# A finished daylight photo of the whole Earth. A daily MODIS true-colour
+# frame is one satellite pass, so half the globe is black. January 2004 is
+# the Blue Marble month GIBS publishes as a complete mosaic.
+WORLD_LAYER = "BlueMarble_NextGeneration"
+WORLD_TIME = date(2004, 1, 1)
+WORLD_WIDTH = 2048
+WORLD_HEIGHT = 1024
+
 # Half the width of the snapshot, in degrees. About 33 km north-south.
 # SMAP pixels are 9 km, so this frame is one blob. MODIS is 250 m, so the
 # same frame shows the fields around the pin.
@@ -107,6 +115,46 @@ def _getmap_url(layer_id: str, day: date, lat: float, lon: float) -> str:
         safe=",",
     )
     return f"{WMS_ENDPOINT}?{query}"
+
+
+def world_map_url() -> str:
+    """One north-up picture of the Earth, for the farm picker.
+
+    WMS 1.3.0 wants the box as south, west, north, east. The longitude-first
+    box -180,-90,180,90 is a strip along the equator, not the globe.
+    """
+
+    query = urlencode(
+        [
+            ("SERVICE", "WMS"),
+            ("VERSION", "1.3.0"),
+            ("REQUEST", "GetMap"),
+            ("LAYERS", WORLD_LAYER),
+            ("STYLES", ""),
+            ("FORMAT", "image/jpeg"),
+            ("CRS", "EPSG:4326"),
+            ("BBOX", "-90,-180,90,180"),
+            ("WIDTH", str(WORLD_WIDTH)),
+            ("HEIGHT", str(WORLD_HEIGHT)),
+            ("TIME", WORLD_TIME.isoformat()),
+        ],
+        safe=",",
+    )
+    return f"{WMS_ENDPOINT}?{query}"
+
+
+def pixel_to_lon_lat(x: float, y: float, width: int, height: int) -> tuple[float, float]:
+    """Map a click on the world picture to longitude and latitude.
+
+    x and y are pixels from the left and from the top. The top-left pixel
+    is 180°W, 90°N. The bottom-right pixel is 180°E, 90°S.
+    """
+
+    if width <= 0 or height <= 0:
+        raise ValueError("The world picture needs a positive size.")
+    lon = x / width * 360.0 - 180.0
+    lat = 90.0 - y / height * 180.0
+    return lon, lat
 
 
 def _bbox(lat: float, lon: float) -> str:

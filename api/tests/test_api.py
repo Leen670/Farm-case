@@ -1,13 +1,14 @@
 """The clues and case endpoints, with POWER replaced by a fixture or a stub."""
 
 import json
+import re
 from pathlib import Path
 
 import httpx
 from fastapi.testclient import TestClient
 
 from app import nasa_power
-from app.main import VERCEL_ORIGIN_PATTERN, app, cors_settings
+from app.main import BROWSER_ORIGIN_PATTERN, app, cors_settings
 from app.nasa_power import parse_climatology
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "power_iowa.json"
@@ -44,7 +45,13 @@ def test_cors_keeps_local_dev_and_any_vercel_site(monkeypatch):
     assert "https://farm-case.vercel.app" in origins
     assert "http://localhost:5173" in origins
     assert "http://127.0.0.1:5173" in origins
-    assert pattern == VERCEL_ORIGIN_PATTERN
+    assert "https://html-classic.itch.zone" in origins
+    assert "https://html.itch.zone" in origins
+    assert pattern == BROWSER_ORIGIN_PATTERN
+    assert re.fullmatch(pattern, "https://kadi.itch.io")
+    assert re.fullmatch(pattern, "https://farm-case.vercel.app")
+    assert re.fullmatch(pattern, "https://evil.example") is None
+    assert re.fullmatch(pattern, "https://evilitch.io") is None
 
 
 def test_docs_list_both_posts():
@@ -171,6 +178,8 @@ def test_simple_case_is_display_ready(monkeypatch):
 def test_docs_list_the_unity_route():
     schema = TestClient(app).get("/openapi.json").json()
     assert "post" in schema["paths"]["/api/case/simple"]
+    assert "get" in schema["paths"]["/api/world-map"]
+    assert "get" in schema["paths"]["/api/image"]
 
 
 def test_an_unsaved_pin_is_unavailable_when_power_is_down(monkeypatch):
