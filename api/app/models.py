@@ -4,7 +4,7 @@ The web app will mirror these shapes in TypeScript. Change a field here only
 when the team agrees, then update web/src/types/api.ts to match.
 """
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -121,3 +121,20 @@ class WorldMap(BaseModel):
     width: int
     height: int
     proxy_path: str
+
+
+class AssistantRequest(BaseModel):
+    """The case already on screen, plus the player's question.
+
+    case accepts either the full case or the flat Unity case. The assistant
+    does not score the farm again.
+    """
+
+    case: dict[str, Any]
+    question: str
+
+
+class AssistantReply(BaseModel):
+    """One short answer for the chat box."""
+
+    answer: str

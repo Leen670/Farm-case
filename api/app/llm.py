@@ -94,6 +94,35 @@ def rewrite_is_faithful(
     return True
 
 
+async def gemini_reply(
+    system: str,
+    user: str,
+    *,
+    max_output_tokens: int,
+    timeout: float,
+) -> str:
+    """One Gemini reply. Raises when the key is missing or the call fails."""
+
+    key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not key:
+        raise RuntimeError("GEMINI_API_KEY is not set")
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        response = await client.post(
+            ENDPOINT,
+            headers={"x-goog-api-key": key, "Content-Type": "application/json"},
+            json={
+                "systemInstruction": {"parts": [{"text": system}]},
+                "contents": [{"role": "user", "parts": [{"text": user}]}],
+                "generationConfig": {
+                    "temperature": 0,
+                    "maxOutputTokens": max_output_tokens,
+                },
+            },
+        )
+    response.raise_for_status()
+    return _reply_text(response.json())
+
+
 async def _call_gemini(key: str, template: str) -> str:
     async with httpx.AsyncClient(timeout=TIMEOUT_SECONDS) as client:
         response = await client.post(
@@ -110,9 +139,13 @@ async def _call_gemini(key: str, template: str) -> str:
             },
         )
     response.raise_for_status()
-    parts = response.json()["candidates"][0]["content"]["parts"]
+    return _reply_text(response.json())
+
+
+def _reply_text(payload: dict) -> str:
+    parts = payload["candidates"][0]["content"]["parts"]
     texts = [part.get("text", "") for part in parts if not part.get("thought") and part.get("text")]
-    return "\n".join(texts)
+    return "\n".join(texts).strip()
 
 
 def _plain_paragraph(text: str) -> str:

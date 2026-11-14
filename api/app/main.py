@@ -10,15 +10,24 @@ Render starts it with the command in render.yaml, on the port Render assigns.
 import os
 from urllib.parse import quote
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
 from app.analysis import ClimateUnavailable, build_case, build_clues
+from app.assistant import allow_question, answer_question
 from app.gibs import WORLD_HEIGHT, WORLD_WIDTH, world_map_url
 from app.images import GibsUrlError, ImageFetchError, fetch_gibs_image
 from app.llm import load_local_env
-from app.models import CaseRequest, CaseResponse, CluesResponse, SimpleCase, WorldMap
+from app.models import (
+    AssistantReply,
+    AssistantRequest,
+    CaseRequest,
+    CaseResponse,
+    CluesResponse,
+    SimpleCase,
+    WorldMap,
+)
 from app.simple_case import as_simple_case
 
 load_local_env()
@@ -153,6 +162,32 @@ async def get_image(url: str) -> Response:
         media_type=content_type,
         headers={"Cache-Control": "public, max-age=86400"},
     )
+
+
+@app.post("/api/assistant", response_model=AssistantReply)
+async def post_assistant(body: AssistantRequest, request: Request) -> AssistantReply:
+    """The AI Assistant button. Answers from the case already on screen.
+
+    Twenty questions per minute per player. If Gemini is unavailable, the
+    reply is one of five prepared answers about the rotation, water, soil,
+    climate, or NASA POWER.
+    """
+
+    if not allow_question(_client_ip(request)):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many questions. Please wait a minute.",
+        )
+    return AssistantReply(answer=await answer_question(body.case, body.question))
+
+
+def _client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for", "")
+    if forwarded.strip():
+        return forwarded.split(",")[0].strip()
+    if request.client is not None:
+        return request.client.host
+    return "unknown"
 
 
 async def _clues(case: CaseRequest):
