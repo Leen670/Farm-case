@@ -74,3 +74,35 @@ class CaseResponse(BaseModel):
     explanation: str
     evidence: list[Evidence]
     used_fallback: bool
+
+
+class SimpleClue(BaseModel):
+    """One card, flattened for Unity's JsonUtility."""
+
+    name: str
+    line: str
+    source: str
+    image_url: str = ""
+
+
+class SimplePlan(BaseModel):
+    """A rotation Unity can show without nested dictionaries."""
+
+    crops: list[str]
+    score: int
+    why: list[str]
+    risks: list[str]
+
+
+class SimpleCase(BaseModel):
+    """The case as Kadi's Unity screens read it.
+
+    JsonUtility needs public fields, JSON arrays, and no nulls. demo_data
+    is true when the climate numbers came from a saved POWER response.
+    """
+
+    title: str
+    clues: list[SimpleClue]
+    recommended: SimplePlan
+    alternatives: list[SimplePlan]
+    demo_data: bool

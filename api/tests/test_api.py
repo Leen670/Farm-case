@@ -131,6 +131,48 @@ def test_a_fresh_power_response_is_not_a_fallback(monkeypatch):
     assert response.json()["used_fallback"] is False
 
 
+def _assert_jsonutility(value):
+    """Unity's reader accepts objects, arrays, strings, numbers, and bools."""
+
+    assert value is not None
+    if isinstance(value, dict):
+        for item in value.values():
+            _assert_jsonutility(item)
+    elif isinstance(value, list):
+        for item in value:
+            _assert_jsonutility(item)
+    else:
+        assert isinstance(value, (str, int, bool))
+
+
+def test_simple_case_is_display_ready(monkeypatch):
+    client = _offline(monkeypatch)
+    response = client.post("/api/case/simple", json=IOWA)
+    assert response.status_code == 200
+    assert "null" not in response.text
+    body = response.json()
+    _assert_jsonutility(body)
+
+    assert body["title"] == "Ada's case"
+    assert body["demo_data"] is True
+    assert [clue["name"] for clue in body["clues"]] == ["Climate", "Soil", "Water", "Crop"]
+    assert all(isinstance(clue["image_url"], str) for clue in body["clues"])
+    assert body["clues"][1]["image_url"] == ""
+    assert "MODIS_Terra_NDVI_8Day" in body["clues"][3]["image_url"]
+
+    recommended = body["recommended"]
+    assert recommended["crops"] == ["maize", "faba bean", "maize"]
+    assert isinstance(recommended["score"], int)
+    assert recommended["why"] and recommended["risks"]
+    assert len(body["alternatives"]) == 2
+    assert all(len(plan["crops"]) == 3 for plan in body["alternatives"])
+
+
+def test_docs_list_the_unity_route():
+    schema = TestClient(app).get("/openapi.json").json()
+    assert "post" in schema["paths"]["/api/case/simple"]
+
+
 def test_an_unsaved_pin_is_unavailable_when_power_is_down(monkeypatch):
     client = _offline(monkeypatch)
     body = dict(IOWA)

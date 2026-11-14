@@ -13,7 +13,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.analysis import ClimateUnavailable, build_case, build_clues
-from app.models import CaseRequest, CaseResponse, CluesResponse
+from app.models import CaseRequest, CaseResponse, CluesResponse, SimpleCase
+from app.simple_case import as_simple_case
 
 # Vite's dev server. Kept even when CORS_ORIGINS names a deployed site.
 LOCAL_ORIGINS = (
@@ -87,6 +88,22 @@ async def post_case(case: CaseRequest) -> CaseResponse:
         return await build_case(case)
     except ClimateUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@app.post("/api/case/simple", response_model=SimpleCase)
+async def post_case_simple(case: CaseRequest) -> SimpleCase:
+    """The same case, flattened for Unity's JsonUtility.
+
+    Four clues, one recommended plan, and two alternatives. Strings are
+    empty rather than null. demo_data is true when the climate came from
+    a saved POWER response.
+    """
+
+    try:
+        full = await build_case(case)
+    except ClimateUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return as_simple_case(full, case.farmer_name)
 
 
 async def _clues(case: CaseRequest):
