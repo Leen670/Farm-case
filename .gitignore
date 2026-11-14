@@ -7,3 +7,6 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .env
+
+# POWER responses saved while the API is running. The demo farms live in api/fixtures.
+api/.power_cache/
