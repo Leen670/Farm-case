@@ -55,6 +55,15 @@ class Plan(BaseModel):
     risks: list[str]
 
 
+class Evidence(BaseModel):
+    """One row of the results screen's See the evidence panel."""
+
+    label: str
+    value: str
+    unit: str
+    source: str
+
+
 class CaseResponse(BaseModel):
     """The full case the results screen renders."""
 
@@ -63,4 +72,5 @@ class CaseResponse(BaseModel):
     recommended: Plan
     alternatives: list[Plan]
     explanation: str
+    evidence: list[Evidence]
     used_fallback: bool

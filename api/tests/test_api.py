@@ -100,6 +100,7 @@ def test_case_ranks_from_the_fixture_and_flags_it(monkeypatch):
     assert response.status_code == 200
     body = response.json()
 
+    climate = parse_climatology(json.loads(FIXTURE.read_text(encoding="utf-8")))
     assert body["used_fallback"] is True
     assert body["recommended"]["rotation"][0] == "maize"
     assert len(body["recommended"]["rotation"]) == 3
@@ -107,6 +108,13 @@ def test_case_ranks_from_the_fixture_and_flags_it(monkeypatch):
     assert 0 <= body["recommended"]["suitability"] <= 100
     assert body["explanation"].startswith("For Ada,")
     assert "saved POWER response" in body["explanation"]
+    assert "maize" in body["explanation"]
+    rain = next(row for row in body["evidence"] if row["label"] == "Yearly rain")
+    assert rain["value"] == f"{climate.rain_mm_per_year:.2f}"
+    assert rain["unit"] == "mm/year"
+    assert rain["source"] == "NASA POWER (climatology, AG community)"
+    wetness = next(row for row in body["evidence"] if row["label"] == "Root-zone wetness")
+    assert wetness["source"] == "NASA POWER GWETROOT"
     assert len(body["clues"]) == 4
 
 

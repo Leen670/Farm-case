@@ -14,6 +14,7 @@ from datetime import date, datetime
 import httpx
 
 from app import gibs, nasa_power
+from app.explain import explain_plan
 from app.models import CaseRequest, CaseResponse, Clue, Plan
 from app.nasa_power import Climatology, PowerError
 from app.scoring import FarmConditions, ScoredRotation, rank_rotations
@@ -95,12 +96,19 @@ async def build_case(case: CaseRequest, *, day: date | datetime | None = None) -
 
     climate, used_fallback = await load_climate(case.lat, case.lon)
     recommendation = rank_rotations(_conditions(case, climate))
+    explanation, evidence = explain_plan(
+        case,
+        recommendation.recommended,
+        climate,
+        used_fallback=used_fallback,
+    )
     return CaseResponse(
         case_id=uuid.uuid4().hex,
         clues=assemble_clues(case, climate, day or date.today()),
         recommended=_plan(recommendation.recommended),
         alternatives=[_plan(item) for item in recommendation.alternatives],
-        explanation=_explanation(case, recommendation.recommended, used_fallback),
+        explanation=explanation,
+        evidence=evidence,
         used_fallback=used_fallback,
     )
 
@@ -208,21 +216,3 @@ def _crop_clue(ndvi: dict) -> Clue:
         image_url=str(ndvi["url"]),
     )
 
-
-def _explanation(case: CaseRequest, plan: ScoredRotation, used_fallback: bool) -> str:
-    """Player-facing paragraph. It describes the plan; it does not choose it."""
-
-    crops = ", ".join(plan.rotation)
-    sentences = [
-        (
-            f"For {case.farmer_name}, the three-year rotation is {crops}, "
-            f"with suitability {plan.suitability}."
-        )
-    ]
-    if plan.reasons:
-        sentences.append(plan.reasons[0])
-    if case.priorities_text.strip():
-        sentences.append(f"The farmer added: {case.priorities_text.strip()}")
-    if used_fallback:
-        sentences.append("The climate numbers came from a saved POWER response.")
-    return " ".join(sentences)
