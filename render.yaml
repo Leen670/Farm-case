@@ -1,0 +1,25 @@
+# Render blueprint for the Farm Case API.
+# No database. The service is a Python process: NASA POWER, GIBS links,
+# and the crop ranker. Demo-farm fixtures ship in the repo.
+# The 0.5 degree POWER cache lives on the instance disk and disappears
+# on the next deploy, which is fine. A missed cache calls POWER again.
+
+services:
+  - type: web
+    name: farm-case-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: main
+    rootDir: api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      # Comma-separated extra origins. *.vercel.app is already allowed in code.
+      # Replace * with the real site later, for example https://farm-case.vercel.app
+      - key: CORS_ORIGINS
+        value: "http://localhost:5173,http://127.0.0.1:5173"

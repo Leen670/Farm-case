@@ -7,7 +7,7 @@ import httpx
 from fastapi.testclient import TestClient
 
 from app import nasa_power
-from app.main import app
+from app.main import VERCEL_ORIGIN_PATTERN, app, cors_settings
 from app.nasa_power import parse_climatology
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "power_iowa.json"
@@ -29,6 +29,22 @@ def _offline(monkeypatch) -> TestClient:
 
     monkeypatch.setattr(nasa_power, "fetch_climatology", boom)
     return TestClient(app)
+
+
+def test_open_cors_is_the_default(monkeypatch):
+    monkeypatch.delenv("CORS_ORIGINS", raising=False)
+    origins, pattern = cors_settings()
+    assert origins == ["*"]
+    assert pattern is None
+
+
+def test_cors_keeps_local_dev_and_any_vercel_site(monkeypatch):
+    monkeypatch.setenv("CORS_ORIGINS", "https://farm-case.vercel.app")
+    origins, pattern = cors_settings()
+    assert "https://farm-case.vercel.app" in origins
+    assert "http://localhost:5173" in origins
+    assert "http://127.0.0.1:5173" in origins
+    assert pattern == VERCEL_ORIGIN_PATTERN
 
 
 def test_docs_list_both_posts():
