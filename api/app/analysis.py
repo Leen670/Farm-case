@@ -15,6 +15,7 @@ import httpx
 
 from app import gibs, nasa_power
 from app.explain import explain_plan
+from app.llm import polish_explanation
 from app.models import CaseRequest, CaseResponse, Clue, Plan
 from app.nasa_power import Climatology, PowerError
 from app.scoring import FarmConditions, ScoredRotation, rank_rotations
@@ -92,6 +93,7 @@ async def build_case(case: CaseRequest, *, day: date | datetime | None = None) -
     """The full results screen: the same four clues, then the ranked plans.
 
     POWER is loaded once. The ranker reads those numbers and the form.
+    Gemini may restyle the paragraph. It does not choose the rotation.
     """
 
     climate, used_fallback = await load_climate(case.lat, case.lon)
@@ -101,6 +103,11 @@ async def build_case(case: CaseRequest, *, day: date | datetime | None = None) -
         recommendation.recommended,
         climate,
         used_fallback=used_fallback,
+    )
+    explanation = await polish_explanation(
+        explanation,
+        case.farmer_name,
+        recommendation.recommended.rotation,
     )
     return CaseResponse(
         case_id=uuid.uuid4().hex,

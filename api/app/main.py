@@ -17,8 +17,11 @@ from fastapi.responses import Response
 from app.analysis import ClimateUnavailable, build_case, build_clues
 from app.gibs import WORLD_HEIGHT, WORLD_WIDTH, world_map_url
 from app.images import GibsUrlError, ImageFetchError, fetch_gibs_image
+from app.llm import load_local_env
 from app.models import CaseRequest, CaseResponse, CluesResponse, SimpleCase, WorldMap
 from app.simple_case import as_simple_case
+
+load_local_env()
 
 # Vite's dev server. Kept even when CORS_ORIGINS names a deployed site.
 LOCAL_ORIGINS = (
