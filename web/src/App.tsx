@@ -3,6 +3,7 @@ import { Shell } from "./components/Shell";
 import { Welcome } from "./pages/Welcome";
 import { FarmerProfile } from "./pages/FarmerProfile";
 import { FarmMap } from "./pages/FarmMap";
+import { EvidenceBoard } from "./pages/EvidenceBoard";
 
 export function App() {
   return (
@@ -25,6 +26,7 @@ function Stage() {
     <Shell>
       {screen === "farmer" && <FarmerProfile />}
       {screen === "map" && <FarmMap />}
+      {screen === "board" && <EvidenceBoard />}
     </Shell>
   );
 }
