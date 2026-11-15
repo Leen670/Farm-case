@@ -7,7 +7,7 @@ from typing import get_args
 from app.crops import CROPS, get_crop
 from app.models import Soil
 from app.nasa_power import parse_climatology
-from app.scoring import FarmConditions, rank_rotations, rotation_delta, score_rotation
+from app.scoring import FarmConditions, heat_fit, rank_rotations, rotation_delta, score_rotation
 
 FIXTURE_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 DEMO_FIXTURES = ("power_iowa.json", "power_punjab.json", "power_andalusia.json")
@@ -53,6 +53,32 @@ def _limited_from_fixture(filename: str, priorities: tuple[str, ...] = ()) -> Fa
     )
 
 
+def test_summer_heat_uses_ecocrop_and_winter_heat_does_not():
+    # Maize absolute minimum is 10°C and the optimum starts at 18°C.
+    # 14°C is halfway up that shoulder, so the trapezoid is one half.
+    halfway = FarmConditions(
+        rain_mm=700,
+        max_temp_c=14,
+        avg_temp_c=14,
+        soil="loamy",
+        water_level="available",
+        water_source="rain",
+    )
+    assert heat_fit(get_crop("maize"), halfway) == 50
+
+    # Wheat's EcoCrop maximum is 27°C. The hottest month is 45°C, which
+    # would zero a summer score. Winter uses the 16°C annual mean instead.
+    hot_site = FarmConditions(
+        rain_mm=700,
+        max_temp_c=45,
+        avg_temp_c=16,
+        soil="loamy",
+        water_level="available",
+        water_source="rain",
+    )
+    assert heat_fit(get_crop("wheat"), hot_site) > 0
+
+
 def test_crop_table_matches_the_contract():
     soils = set(get_args(Soil))
     names = {crop.name for crop in CROPS}
@@ -60,6 +86,11 @@ def test_crop_table_matches_the_contract():
     assert {"wheat", "chickpea", "alfalfa", "maize"} <= names
     assert get_crop("alfalfa").water_need_mm >= 800
     assert get_crop("corn").name == "maize"
+    maize = get_crop("maize")
+    assert (maize.temp_min, maize.temp_opt_lo, maize.temp_opt_hi, maize.temp_max) == (10, 18, 33, 47)
+    assert (maize.ph_min, maize.ph_max) == (4.5, 8.5)
+    # Barley's old hand-written ceiling was 8.5. EcoCrop's absolute range is 6–8.
+    assert (get_crop("barley").ph_min, get_crop("barley").ph_max) == (6, 8)
     for crop in CROPS:
         assert set(crop.soil_pref) <= soils
 
@@ -120,14 +151,16 @@ def test_scores_stay_between_0_and_100():
     assert floored.suitability == 0
 
 
-def test_demo_climates_change_the_first_crop():
-    # Same farmer choices, three POWER climates. Iowa's hottest month sits
-    # near maize. Punjab's sits on the heat-5 crops, so millet leads.
-    iowa = rank_rotations(_limited_from_fixture("power_iowa.json"))
-    punjab = rank_rotations(_limited_from_fixture("power_punjab.json"))
-    assert iowa.recommended.rotation[0] == "maize"
-    assert punjab.recommended.rotation[0] == "millet"
-    assert iowa.recommended.rotation != punjab.recommended.rotation
+def test_a_hot_month_outside_ecocrop_lets_the_winter_crop_lead():
+    # Iowa's hottest month is 42°C. Maize's optimum ends at 33°C.
+    # Punjab's is 50°C, above pearl millet's absolute maximum of 40°C.
+    # Winter crops are scored on the annual mean, so barley is not zeroed.
+    iowa = _limited_from_fixture("power_iowa.json")
+    punjab = _limited_from_fixture("power_punjab.json")
+    assert rank_rotations(iowa).recommended.rotation[0] == "barley"
+    assert rank_rotations(punjab).recommended.rotation[0] == "barley"
+    assert heat_fit(get_crop("maize"), iowa) > heat_fit(get_crop("maize"), punjab)
+    assert heat_fit(get_crop("millet"), punjab) == 0
 
 
 def test_same_input_same_output():

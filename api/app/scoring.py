@@ -19,6 +19,7 @@ from itertools import product
 from typing import get_args
 
 from app.crops import CROPS, Crop, find_crop, get_crop
+from app.ecocrop import trapezoid
 from app.models import Priority, Soil, WaterLevel, WaterSource
 
 # POWER's yearly rain, plus how much irrigation the farmer said they can add.
@@ -196,19 +197,33 @@ def water_fit(crop: Crop, conditions: FarmConditions) -> float:
 
 
 def _required_heat(temp_c: float) -> float:
-    """Place a temperature on the same 1–5 scale as the crop table.
+    """Place a winter temperature on the same 1–5 scale as heat_tolerance.
 
-    17°C is 1. Each further 8°C asks for one more level, so 41°C is 4 and
-    49°C is 5. Maize is rated 4, which matches a summer whose hottest month
-    is near 42°C. Millet, sorghum, sesame, and cotton are rated 5.
+    17°C is 1. Each further 8°C asks for one more level. Summer crops do
+    not use this scale. Their heat comes from the EcoCrop trapezoid.
     """
 
     return min(5.0, max(1.0, (temp_c - 9) / 8))
 
 
 def heat_fit(crop: Crop, conditions: FarmConditions) -> float:
-    temperature = conditions.max_temp_c if crop.season == "summer" else conditions.avg_temp_c
-    gap = crop.heat_tolerance - _required_heat(temperature)
+    """Summer heat is the EcoCrop trapezoid on the hottest month.
+
+    Winter crops stay on the 1–5 scale and the annual mean. A winter
+    grain's EcoCrop maximum is the temperature that stops it in summer,
+    so scoring it on the hottest month would zero it on a hot farm.
+    """
+
+    if crop.season == "summer":
+        suitability = trapezoid(
+            conditions.max_temp_c,
+            crop.temp_min,
+            crop.temp_opt_lo,
+            crop.temp_opt_hi,
+            crop.temp_max,
+        )
+        return _bound(100.0 * suitability)
+    gap = crop.heat_tolerance - _required_heat(conditions.avg_temp_c)
     if gap >= 0:
         return _bound(100.0 - gap * HEAT_OVERSHOOT_STEP)
     return _bound(100.0 - (-gap) * HEAT_SHORTFALL_STEP)

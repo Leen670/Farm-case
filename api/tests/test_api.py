@@ -111,13 +111,13 @@ def test_case_ranks_from_the_fixture_and_flags_it(monkeypatch):
 
     climate = parse_climatology(json.loads(FIXTURE.read_text(encoding="utf-8")))
     assert body["used_fallback"] is True
-    assert body["recommended"]["rotation"][0] == "maize"
+    assert body["recommended"]["rotation"][0] == "barley"
     assert len(body["recommended"]["rotation"]) == 3
     assert len(body["alternatives"]) == 2
     assert 0 <= body["recommended"]["suitability"] <= 100
     assert body["explanation"].startswith("For Ada,")
     assert "saved POWER response" in body["explanation"]
-    assert "maize" in body["explanation"]
+    assert "barley" in body["explanation"]
     rain = next(row for row in body["evidence"] if row["label"] == "Yearly rain")
     assert rain["value"] == f"{climate.rain_mm_per_year:.2f}"
     assert rain["unit"] == "mm/year"
@@ -181,7 +181,7 @@ def test_simple_case_is_display_ready(monkeypatch):
     assert "MODIS_Terra_NDVI_8Day" in body["clues"][3]["image_url"]
 
     recommended = body["recommended"]
-    assert recommended["crops"] == ["maize", "faba bean", "maize"]
+    assert recommended["crops"] == ["barley", "faba bean", "onion"]
     assert isinstance(recommended["score"], int)
     assert recommended["why"] and recommended["risks"]
     assert len(body["alternatives"]) == 2

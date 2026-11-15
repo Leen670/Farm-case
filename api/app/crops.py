@@ -12,15 +12,20 @@ pea row (350–500). Sesame is not a row of its own; it uses the oil-seed range
 
 Salt tolerance is a 1–5 stand-in for the classes in FAO Irrigation and
 Drainage Paper 29: 5 tolerant, 4 moderately tolerant, 2 moderately sensitive,
-1 sensitive. Heat tolerance is our 1–5 scale for the game, taken from the
-crop's usual season in those same FAO guides. It is not a FAO measurement.
-Soil preference is ordinary agronomy, not a NASA product.
+1 sensitive. Soil preference is ordinary agronomy, not a NASA product.
+
+Temperature limits and soil pH are 'FAO EcoCrop (via openclim/ecocrop)'.
+Summer crops are scored on those temperature limits. Winter crops still
+use heat_tolerance, a 1–5 scale for the cool season, so a hot site does
+not treat a winter grain as if it were growing through the hottest month.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal
+
+from app.ecocrop import EcoCrop, species
 
 Family = Literal["cereal", "legume", "oilseed", "forage", "vegetable", "fibre"]
 Season = Literal["winter", "summer"]
@@ -40,13 +45,19 @@ class Crop:
     family: Family
     season: Season
     water_need_mm: int
+    # Read for winter crops only. Summer heat uses the EcoCrop range below.
     heat_tolerance: int
     salt_tolerance: int
     soil_pref: tuple[str, ...]
     soil_effect: SoilEffect
-    # Used only when a SoilGrids pH is passed in. Ignored otherwise.
-    ph_min: float = 5.5
-    ph_max: float = 8.0
+    # FAO EcoCrop (via openclim/ecocrop). Absolute temperature, degrees C.
+    temp_min: float
+    temp_opt_lo: float
+    temp_opt_hi: float
+    temp_max: float
+    # FAO EcoCrop (via openclim/ecocrop). Used when a SoilGrids pH is passed in.
+    ph_min: float
+    ph_max: float
 
     def __post_init__(self) -> None:
         if self.family not in FAMILIES:
@@ -62,9 +73,30 @@ class Crop:
         unknown = set(self.soil_pref) - set(SOIL_TYPES)
         if unknown:
             raise ValueError(f"{self.name} has unknown soils: {sorted(unknown)}")
+        if not (self.temp_min <= self.temp_opt_lo <= self.temp_opt_hi <= self.temp_max):
+            raise ValueError(f"{self.name} has an unordered temperature range")
+        if self.ph_min > self.ph_max:
+            raise ValueError(f"{self.name} has an unordered pH range")
+
+
+def _climate(scientific_name: str) -> dict[str, float]:
+    """Temperature and pH from one EcoCrop row. Rain stays the FAO water table."""
+
+    row: EcoCrop = species(scientific_name)
+    if row.ph_min is None or row.ph_max is None:
+        raise ValueError(f"{scientific_name} has no EcoCrop pH range")
+    return {
+        "temp_min": row.temp_min,
+        "temp_opt_lo": row.temp_opt_lo,
+        "temp_opt_hi": row.temp_opt_hi,
+        "temp_max": row.temp_max,
+        "ph_min": row.ph_min,
+        "ph_max": row.ph_max,
+    }
 
 
 # Fifteen crops. 15³ is 3,375 rotations, which is the search the brief sized.
+# Each **_climate(...) is one EcoCrop scientific name.
 CROPS: tuple[Crop, ...] = (
     Crop(
         name="wheat",
@@ -75,6 +107,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=4,  # moderately tolerant
         soil_pref=("loamy", "clay", "silty"),
         soil_effect="neutral",
+        **_climate("Triticum aestivum"),
     ),
     Crop(
         name="barley",
@@ -85,7 +118,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=5,  # tolerant
         soil_pref=("loamy", "sandy"),
         soil_effect="neutral",
-        ph_max=8.5,
+        **_climate("Hordeum vulgare"),
     ),
     Crop(
         name="sorghum",
@@ -96,6 +129,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=4,  # moderately tolerant
         soil_pref=("loamy", "sandy", "clay"),
         soil_effect="structure",
+        **_climate("Sorghum bicolor"),
     ),
     Crop(
         name="millet",
@@ -104,10 +138,11 @@ CROPS: tuple[Crop, ...] = (
         water_need_mm=550,  # sorghum/millet 450–650
         heat_tolerance=5,
         # Paper 29 has no millet row. Millet shares sorghum's water row and
-        # the same moderately tolerant class.
+        # the same moderately tolerant class. The EcoCrop row is pearl millet.
         salt_tolerance=4,
         soil_pref=("sandy", "loamy"),
         soil_effect="neutral",
+        **_climate("Pennisetum glaucum"),
     ),
     Crop(
         name="maize",
@@ -118,6 +153,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=2,  # moderately sensitive
         soil_pref=("loamy", "silty"),
         soil_effect="depletes",
+        **_climate("Zea mays"),
     ),
     Crop(
         name="chickpea",
@@ -128,6 +164,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=1,  # bean: sensitive
         soil_pref=("loamy", "sandy"),
         soil_effect="nitrogen",
+        **_climate("Cicer arietinum"),
     ),
     Crop(
         name="faba bean",
@@ -138,6 +175,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=1,  # bean: sensitive
         soil_pref=("loamy", "clay"),
         soil_effect="nitrogen",
+        **_climate("Vicia faba"),
     ),
     Crop(
         name="lentil",
@@ -148,6 +186,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=1,  # bean: sensitive
         soil_pref=("loamy", "sandy"),
         soil_effect="nitrogen",
+        **_climate("Lens culinaris"),
     ),
     Crop(
         name="sesame",
@@ -158,6 +197,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=2,
         soil_pref=("sandy", "loamy"),
         soil_effect="neutral",
+        **_climate("Sesamum indicum"),
     ),
     Crop(
         name="sunflower",
@@ -168,6 +208,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=2,  # moderately sensitive
         soil_pref=("loamy", "silty", "clay"),
         soil_effect="structure",
+        **_climate("Helianthus annuus"),
     ),
     Crop(
         name="alfalfa",
@@ -180,6 +221,7 @@ CROPS: tuple[Crop, ...] = (
         # Alfalfa also roots deeply. One effect per crop: nitrogen is the
         # one the legume-after-cereal rule uses.
         soil_effect="nitrogen",
+        **_climate("Medicago sativa"),
     ),
     Crop(
         name="tomato",
@@ -190,6 +232,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=2,  # moderately sensitive
         soil_pref=("loamy", "silty"),
         soil_effect="depletes",
+        **_climate("Lycopersicon esculentum"),
     ),
     Crop(
         name="potato",
@@ -200,6 +243,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=2,  # moderately sensitive
         soil_pref=("loamy", "sandy"),
         soil_effect="depletes",
+        **_climate("Solanum tuberosum"),
     ),
     Crop(
         name="onion",
@@ -210,6 +254,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=1,  # sensitive
         soil_pref=("loamy", "silty", "sandy"),
         soil_effect="neutral",
+        **_climate("Allium cepa"),
     ),
     Crop(
         name="cotton",
@@ -220,6 +265,7 @@ CROPS: tuple[Crop, ...] = (
         salt_tolerance=5,  # tolerant
         soil_pref=("loamy", "clay"),
         soil_effect="depletes",
+        **_climate("Gossypium hirsutum"),
     ),
 )
 

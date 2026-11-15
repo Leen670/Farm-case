@@ -65,6 +65,10 @@ class EcoCrop:
     rain_opt_lo: float
     rain_opt_hi: float
     rain_max: float
+    # Absolute soil pH. None when that cell was blank. Not part of the
+    # temperature or rain score.
+    ph_min: float | None = None
+    ph_max: float | None = None
 
     def temperature(self, celsius: float) -> float:
         """Suitability of one air temperature, in degrees Celsius."""
@@ -136,8 +140,19 @@ def load_crops() -> tuple[EcoCrop, ...]:
                 rain_opt_lo=ropmn,
                 rain_opt_hi=ropmx,
                 rain_max=rmax,
+                ph_min=_number(row, "PHMIN"),
+                ph_max=_number(row, "PHMAX"),
             )
     return tuple(kept.values())
+
+
+def species(scientific_name: str) -> EcoCrop:
+    """The row for one scientific name, after blanks are dropped."""
+
+    for crop in load_crops():
+        if crop.scientific_name == scientific_name:
+            return crop
+    raise KeyError(f"Unknown EcoCrop species: {scientific_name}")
 
 
 def find_crop(common_name: str) -> EcoCrop:
