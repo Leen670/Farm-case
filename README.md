@@ -1,5 +1,7 @@
 # Farm Case
 
+[![Tests](https://github.com/Leen670/Farm-case/actions/workflows/ci.yml/badge.svg)](https://github.com/Leen670/Farm-case/actions/workflows/ci.yml)
+
 Farm Case is a crop-rotation detective game for NASA Space Apps. You pin a farm, collect the climate and satellite clues, and get a three-year rotation. A fixed score chooses the crops. The language model only restyles the paragraph that explains that score.
 
 Play it at [farm-case-web.onrender.com](https://farm-case-web.onrender.com). The API is [farm-case-api.onrender.com](https://farm-case-api.onrender.com). The one-page story is in [Summary](Summary).
