@@ -14,3 +14,6 @@ api/.power_cache/
 # Web app build output
 web/node_modules/
 web/dist/
+
+# Local itch.io upload. The site is built from web/, not from this zip.
+farm-case-itch.zip
