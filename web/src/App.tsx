@@ -5,6 +5,7 @@ import { FarmerProfile } from "./pages/FarmerProfile";
 import { FarmMap } from "./pages/FarmMap";
 import { EvidenceBoard } from "./pages/EvidenceBoard";
 import { Investigation } from "./pages/Investigation";
+import { Results } from "./pages/Results";
 
 export function App() {
   return (
@@ -30,6 +31,7 @@ function Stage() {
       {screen === "map" && <FarmMap />}
       {screen === "board" && <EvidenceBoard />}
       {screen === "investigation" && <Investigation />}
+      {screen === "results" && <Results />}
     </Shell>
   );
 }
