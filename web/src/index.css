@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-navy: #071e36;
+  --color-navy-deep: #04111f;
+  --color-lime: #a6dc2c;
+  --color-lime-dark: #5f9a12;
+  --color-cream: #f4f1dc;
+  --color-ink: #102033;
+  --color-moss: #1c542c;
+  --color-leaf: #e5f8d4;
+  --color-sky: #2090f0;
+  --color-watch: #d6453d;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-cream);
+}
+
+@layer components {
+  .field {
+    @apply w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-lime-dark;
+  }
+
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.16em] text-ink/50;
+  }
+}
