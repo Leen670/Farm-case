@@ -28,9 +28,34 @@ body {
   background: var(--color-cream);
 }
 
+.location-map {
+  height: 14rem;
+  width: 100%;
+  z-index: 0;
+  background: #c5d5b8;
+  font-family: inherit;
+}
+
+.location-map img {
+  max-width: none;
+}
+
+.farm-pin {
+  width: 18px;
+  height: 18px;
+  border: 2px solid white;
+  border-radius: 999px;
+  background: #2f8a34;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 45%);
+}
+
 @layer components {
   .field {
     @apply w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-lime-dark;
+  }
+
+  .field-line {
+    @apply min-w-0 flex-1 rounded-lg border border-[#e6dcc8] bg-white px-3 py-1.5 text-xs text-[#2c3428] outline-none placeholder:text-[#b3a894] focus:border-[#2f8a34];
   }
 
   .eyebrow {

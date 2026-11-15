@@ -187,20 +187,29 @@ def _soil_clue(case: CaseRequest) -> Clue:
 
 
 def _water_clue(case: CaseRequest, climate: Climatology, smap: dict) -> Clue:
-    return Clue(
-        id="water",
-        title="Water",
-        values={
-            "root_zone_wetness": climate.root_zone_wetness,
-            "wetness_label": gibs.POWER_WETNESS_LABEL,
-            "water_level": case.water_level,
-            "water_source": case.water_source,
-        },
-        summary=(
+    values: dict[str, float | str] = {
+        "wetness_label": gibs.POWER_WETNESS_LABEL,
+        "water_level": case.water_level,
+        "water_source": case.water_source,
+    }
+    if climate.root_zone_wetness is None:
+        summary = (
+            "NASA POWER has no root-zone wetness for this pin, which usually "
+            "means it is not on land. The farmer reports "
+            f"{case.water_level} water from {case.water_source}."
+        )
+    else:
+        values["root_zone_wetness"] = climate.root_zone_wetness
+        summary = (
             f"Root-zone wetness is {climate.root_zone_wetness:.2f} "
             f"from {gibs.POWER_WETNESS_LABEL}. The farmer reports "
             f"{case.water_level} water from {case.water_source}."
-        ),
+        )
+    return Clue(
+        id="water",
+        title="Water",
+        values=values,
+        summary=summary,
         source=f"{gibs.POWER_WETNESS_LABEL}; {smap['source_label']}",
         source_url=nasa_power.SOURCE_URL,
         image_url=str(smap["url"]),

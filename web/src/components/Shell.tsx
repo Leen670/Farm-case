@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Button } from "./Button";
 import { useGame, type Screen } from "../state/game";
 
 const STEPS: { screen: Screen; label: string }[] = [
@@ -101,9 +100,6 @@ export function Shell({ children, tone = "cream" }: { children: ReactNode; tone?
               Farm Data
             </NavButton>
           </nav>
-          <Button className="!px-4 !py-1.5 text-xs" onClick={() => go("data")}>
-            NASA DATA
-          </Button>
         </div>
       </header>
       <main className={hero ? "flex flex-1 flex-col" : "mx-auto w-full max-w-6xl flex-1 px-5 py-8"}>{children}</main>

@@ -183,10 +183,10 @@ class Climatology:
     rain_mm_per_year: float
     sunlight_mj_per_m2_per_day: float
     humidity_percent: float
-    root_zone_wetness: float
+    root_zone_wetness: float | None
 
     def values(self) -> dict[str, float | str]:
-        return {
+        numbers: dict[str, float | str] = {
             "avg_temp_c": self.avg_temp_c,
             "annual_max_temp_c": self.annual_max_temp_c,
             "annual_max_temp_month": self.annual_max_temp_month,
@@ -194,15 +194,34 @@ class Climatology:
             "rain_mm_per_year": self.rain_mm_per_year,
             "sunlight_mj_per_m2_per_day": self.sunlight_mj_per_m2_per_day,
             "humidity_percent": self.humidity_percent,
-            "root_zone_wetness": self.root_zone_wetness,
         }
+        if self.root_zone_wetness is not None:
+            numbers["root_zone_wetness"] = self.root_zone_wetness
+        return numbers
 
 
 def _annual(payload: dict, name: str) -> float:
-    value = payload["properties"]["parameter"][name]["ANN"]
+    value = _raw_annual(payload, name)
     if value == FILL_VALUE:
         raise PowerError(f"POWER has no {name} value for this point")
     return float(value)
+
+
+def _optional_annual(payload: dict, name: str) -> float | None:
+    """None when POWER's fill value is the only annual number.
+
+    Root-zone wetness is empty over open water. Temperature and rain are not,
+    so a missing wetness reading must not throw away the rest of the climate.
+    """
+
+    value = _raw_annual(payload, name)
+    if value == FILL_VALUE:
+        return None
+    return float(value)
+
+
+def _raw_annual(payload: dict, name: str) -> float:
+    return float(payload["properties"]["parameter"][name]["ANN"])
 
 
 def rain_mm_per_year(monthly_mm_per_day: dict[str, float]) -> float:
@@ -239,7 +258,7 @@ def parse_climatology(payload: dict) -> Climatology:
         rain_mm_per_year=rain_mm_per_year(series["PRECTOTCORR"]),
         sunlight_mj_per_m2_per_day=_annual(payload, "ALLSKY_SFC_SW_DWN"),
         humidity_percent=_annual(payload, "RH2M"),
-        root_zone_wetness=_annual(payload, "GWETROOT"),
+        root_zone_wetness=_optional_annual(payload, "GWETROOT"),
     )
 
 

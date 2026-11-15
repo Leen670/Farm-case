@@ -123,15 +123,24 @@ class WorldMap(BaseModel):
     proxy_path: str
 
 
+class AssistantTurn(BaseModel):
+    """One earlier line in the chat. The case is still the source of farm facts."""
+
+    role: Literal["user", "assistant"]
+    text: str
+
+
 class AssistantRequest(BaseModel):
     """The case already on screen, plus the player's question.
 
     case accepts either the full case or the flat Unity case. The assistant
-    does not score the farm again.
+    does not score the farm again. history is the conversation so far, so a
+    follow-up can refer to the previous answer.
     """
 
     case: dict[str, Any]
     question: str
+    history: list[AssistantTurn] = []
 
 
 class AssistantReply(BaseModel):

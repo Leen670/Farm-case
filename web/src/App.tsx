@@ -21,17 +21,12 @@ export function App() {
 function Stage() {
   const { screen } = useGame();
   if (screen === "welcome") return <Welcome />;
-  const dark = screen === "investigation";
-  return (
-    <Shell tone={dark ? "dark" : "cream"}>
-      {screen === "farmer" && <FarmerProfile />}
-      {screen === "map" && <FarmMap />}
-      {screen === "board" && <EvidenceBoard />}
-      {screen === "investigation" && <Investigation />}
-      {screen === "results" && <Results />}
-      {screen === "files" && <CaseFiles />}
-      {screen === "data" && <FarmData />}
-      {screen === "assistant" && <Assistant />}
-    </Shell>
-  );
+  if (screen === "farmer") return <FarmerProfile />;
+  if (screen === "map") return <FarmMap />;
+  if (screen === "investigation") return <Investigation />;
+  if (screen === "results") return <Results />;
+  if (screen === "files") return <CaseFiles />;
+  if (screen === "data") return <FarmData />;
+  if (screen === "assistant") return <Assistant />;
+  return <Shell>{screen === "board" && <EvidenceBoard />}</Shell>;
 }

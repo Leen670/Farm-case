@@ -25,7 +25,9 @@ SYSTEM_PROMPT = (
     "Use only the case JSON and general farming knowledge. "
     "Do not invent measurements, dates, or crops, and do not change the rotation. "
     "If the case does not say it, say you do not know. "
-    "If the question is not about this farm, politely refuse."
+    "If the question is not about this farm, politely refuse. "
+    "History is this conversation. Use it for follow-up questions. "
+    "Farm facts still come only from the case."
 )
 
 _HITS: dict[str, deque[float]] = defaultdict(deque)
@@ -51,8 +53,11 @@ def allow_question(ip: str, now: float | None = None) -> bool:
     return True
 
 
-async def answer_question(case: dict, question: str) -> str:
-    """Answer from Gemini, or from the five prepared replies."""
+async def answer_question(case: dict, question: str, history: list | None = None) -> str:
+    """Answer from Gemini, or from the five prepared replies.
+
+    history is the earlier chat, newest last. It does not replace the case.
+    """
 
     asked = " ".join(question.split())[:MAX_QUESTION_CHARS]
     if not asked:
@@ -60,7 +65,10 @@ async def answer_question(case: dict, question: str) -> str:
     try:
         reply = await gemini_reply(
             SYSTEM_PROMPT,
-            json.dumps({"case": _slim(case), "question": asked}, ensure_ascii=False),
+            json.dumps(
+                {"case": _slim(case), "history": _history(history), "question": asked},
+                ensure_ascii=False,
+            ),
             max_output_tokens=MAX_OUTPUT_TOKENS,
             timeout=TIMEOUT_SECONDS,
         )
@@ -166,6 +174,26 @@ def _sentence(text: str) -> str:
     if cleaned[-1] not in ".!?":
         cleaned += "."
     return cleaned
+
+
+def _history(turns: list | None) -> list[dict[str, str]]:
+    """Keep the last few lines. Drop anything that is not a short chat turn."""
+
+    if not turns:
+        return []
+    kept: list[dict[str, str]] = []
+    for turn in turns[-8:]:
+        if isinstance(turn, dict):
+            role = turn.get("role")
+            raw = turn.get("text", "")
+        else:
+            role = getattr(turn, "role", None)
+            raw = getattr(turn, "text", "")
+        text = " ".join(str(raw).split())[:MAX_QUESTION_CHARS]
+        if role not in ("user", "assistant") or not text:
+            continue
+        kept.append({"role": role, "text": text})
+    return kept
 
 
 def _slim(value):

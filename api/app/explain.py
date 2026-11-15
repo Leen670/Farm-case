@@ -122,8 +122,12 @@ def evidence_rows(case: CaseRequest, climate: Climatology) -> list[Evidence]:
         ),
         Evidence(
             label="Root-zone wetness",
-            value=f"{climate.root_zone_wetness:.2f}",
-            unit="0–1",
+            value=(
+                "not available"
+                if climate.root_zone_wetness is None
+                else f"{climate.root_zone_wetness:.2f}"
+            ),
+            unit="" if climate.root_zone_wetness is None else "0–1",
             source=gibs.POWER_WETNESS_LABEL,
         ),
     ]

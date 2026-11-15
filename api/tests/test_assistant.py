@@ -93,6 +93,34 @@ def test_a_gemini_reply_is_returned(monkeypatch):
     assert response.json()["answer"] == "The plan is maize, then faba bean, then maize."
 
 
+def test_history_goes_with_the_follow_up(monkeypatch):
+    reset_rate_limit()
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+
+    async def fake(system, user, *, max_output_tokens, timeout):
+        assert "And the risk?" in user
+        assert "Maize then beans." in user
+        assert max_output_tokens == 300
+        assert timeout == 10.0
+        return "Year 1 maize draws nitrogen down."
+
+    monkeypatch.setattr("app.assistant.gemini_reply", fake)
+    response = TestClient(app).post(
+        "/api/assistant",
+        json={
+            "case": CASE,
+            "question": "And the risk?",
+            "history": [
+                {"role": "user", "text": "Why this rotation?"},
+                {"role": "assistant", "text": "Maize then beans."},
+            ],
+        },
+        headers={"x-forwarded-for": "203.0.113.13"},
+    )
+    assert response.status_code == 200
+    assert "nitrogen" in response.json()["answer"]
+
+
 def test_the_twenty_first_question_waits(monkeypatch):
     reset_rate_limit()
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)

@@ -56,8 +56,12 @@ export function createCase(farm: CaseRequest): Promise<CaseResponse> {
   return post<CaseResponse>("/api/case", farm);
 }
 
-export function askAssistant(caseResult: CaseResponse, question: string): Promise<string> {
-  return post<{ answer: string }>("/api/assistant", { case: caseResult, question }).then(
+export function askAssistant(
+  caseResult: CaseResponse,
+  question: string,
+  history: { role: "user" | "assistant"; text: string }[] = [],
+): Promise<string> {
+  return post<{ answer: string }>("/api/assistant", { case: caseResult, question, history }).then(
     (body) => body.answer,
   );
 }

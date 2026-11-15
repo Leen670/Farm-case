@@ -40,3 +40,12 @@ def test_parse_iowa_fixture():
     yearly = round(sum(series["PRECTOTCORR"][month] * days for month, days in DAYS.items()), 2)
     assert parsed.rain_mm_per_year == yearly
     assert payload["parameters"]["PRECTOTCORR"]["units"] == "mm/day"
+
+
+def test_missing_root_zone_wetness_keeps_the_rest_of_the_climate():
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    payload["properties"]["parameter"]["GWETROOT"]["ANN"] = -999.0
+    parsed = parse_climatology(payload)
+    assert parsed.root_zone_wetness is None
+    assert parsed.avg_temp_c == payload["properties"]["parameter"]["T2M"]["ANN"]
+    assert "root_zone_wetness" not in parsed.values()

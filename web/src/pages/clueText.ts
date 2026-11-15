@@ -22,6 +22,13 @@ export function sourcePill(id: string): string {
   return "Farmer report";
 }
 
+function wetnessText(values: Clue["values"]): string | null {
+  const raw = values.root_zone_wetness;
+  const number = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isFinite(number)) return null;
+  return number.toFixed(2);
+}
+
 export function clueHeadline(clue: Clue): string {
   const values = clue.values;
   if (clue.id === "climate") return `${Number(values.avg_temp_c).toFixed(1)}°C`;
@@ -29,7 +36,7 @@ export function clueHeadline(clue: Clue): string {
     const soil = String(values.soil);
     return soil.charAt(0).toUpperCase() + soil.slice(1);
   }
-  if (clue.id === "water") return Number(values.root_zone_wetness).toFixed(2);
+  if (clue.id === "water") return wetnessText(values) ?? "No soil wetness";
   return String(values.image_date);
 }
 
@@ -39,6 +46,9 @@ export function clueValue(clue: Clue): string {
     return `${Number(values.avg_temp_c).toFixed(1)}°C · ${Math.round(Number(values.rain_mm_per_year))} mm rain`;
   }
   if (clue.id === "soil") return clueHeadline(clue);
-  if (clue.id === "water") return `Wetness ${Number(values.root_zone_wetness).toFixed(2)}`;
+  if (clue.id === "water") {
+    const wetness = wetnessText(values);
+    return wetness ? `Wetness ${wetness}` : "No soil wetness at this pin";
+  }
   return `MODIS picture ${values.image_date}`;
 }

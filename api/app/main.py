@@ -178,7 +178,13 @@ async def post_assistant(body: AssistantRequest, request: Request) -> AssistantR
             status_code=429,
             detail="Too many questions. Please wait a minute.",
         )
-    return AssistantReply(answer=await answer_question(body.case, body.question))
+    return AssistantReply(
+        answer=await answer_question(
+            body.case,
+            body.question,
+            [turn.model_dump() for turn in body.history],
+        )
+    )
 
 
 def _client_ip(request: Request) -> str:
