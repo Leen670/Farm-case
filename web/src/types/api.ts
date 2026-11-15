@@ -49,6 +49,7 @@ export type CaseResponse = {
   explanation: string;
   evidence: Evidence[];
   used_fallback: boolean;
+  confidence: "High" | "Medium" | "Low";
 };
 
 export type WorldMap = {

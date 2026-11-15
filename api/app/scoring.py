@@ -14,7 +14,7 @@ Equal totals then prefer three different crop names, then A to Z.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import product
 from typing import get_args
 
@@ -415,3 +415,27 @@ def rank_rotations(conditions: FarmConditions) -> Recommendation:
         recommended=ranked[0][1],
         alternatives=(ranked[1][1], ranked[2][1]),
     )
+
+
+def confidence_label(conditions: FarmConditions, baseline: tuple[str, ...] | None = None) -> str:
+    """High, Medium, or Low from how often the winner survives a small nudge.
+
+    Summer uses the hottest month and winter uses the annual mean, so one
+    degree moves both. Rain moves by ten percent. The other three nudges
+    stay on the original climate. The winner changing in none of the four
+    is High, in one is Medium, and in more than one is Low.
+    """
+
+    winner = baseline if baseline is not None else rank_rotations(conditions).recommended.rotation
+    shifts = (
+        replace(conditions, max_temp_c=conditions.max_temp_c + 1, avg_temp_c=conditions.avg_temp_c + 1),
+        replace(conditions, max_temp_c=conditions.max_temp_c - 1, avg_temp_c=conditions.avg_temp_c - 1),
+        replace(conditions, rain_mm=conditions.rain_mm * 1.1),
+        replace(conditions, rain_mm=conditions.rain_mm * 0.9),
+    )
+    changes = sum(rank_rotations(shift).recommended.rotation != winner for shift in shifts)
+    if changes == 0:
+        return "High"
+    if changes == 1:
+        return "Medium"
+    return "Low"

@@ -136,6 +136,11 @@ export function Results() {
                 <div className="text-right">
                   <p className="text-[10px] font-extrabold text-[#6d6254]">Match Score</p>
                   <p className="text-3xl leading-none font-extrabold text-[#1f8a3a]">{plan.suitability}%</p>
+                  {result.confidence && (
+                    <p className="mt-1 text-[10px] font-extrabold tracking-wide text-[#6d6254]">
+                      {result.confidence} confidence
+                    </p>
+                  )}
                 </div>
               </div>
 

@@ -2,6 +2,7 @@
 
 import json
 import re
+from dataclasses import replace
 from pathlib import Path
 
 import httpx
@@ -10,6 +11,7 @@ from fastapi.testclient import TestClient
 from app import nasa_power
 from app.main import BROWSER_ORIGIN_PATTERN, app, cors_settings
 from app.nasa_power import parse_climatology
+from app.scoring import FarmConditions, rank_rotations
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "power_iowa.json"
 IOWA = {
@@ -125,6 +127,32 @@ def test_case_ranks_from_the_fixture_and_flags_it(monkeypatch):
     wetness = next(row for row in body["evidence"] if row["label"] == "Root-zone wetness")
     assert wetness["source"] == "NASA POWER GWETROOT"
     assert len(body["clues"]) == 4
+
+
+def test_confidence_counts_how_often_the_top_rotation_moves(monkeypatch):
+    # One degree on both temperatures, and ten percent on the rain.
+    # None of the four winners change: High. One changes: Medium. More: Low.
+    client = _offline(monkeypatch)
+    body = client.post("/api/case", json=IOWA).json()
+    climate = parse_climatology(json.loads(FIXTURE.read_text(encoding="utf-8")))
+    conditions = FarmConditions(
+        rain_mm=climate.rain_mm_per_year,
+        max_temp_c=climate.annual_max_temp_c,
+        avg_temp_c=climate.avg_temp_c,
+        soil=IOWA["soil"],
+        water_level=IOWA["water_level"],
+        water_source=IOWA["water_source"],
+    )
+    winner = tuple(body["recommended"]["rotation"])
+    shifts = (
+        replace(conditions, max_temp_c=conditions.max_temp_c + 1, avg_temp_c=conditions.avg_temp_c + 1),
+        replace(conditions, max_temp_c=conditions.max_temp_c - 1, avg_temp_c=conditions.avg_temp_c - 1),
+        replace(conditions, rain_mm=conditions.rain_mm * 1.1),
+        replace(conditions, rain_mm=conditions.rain_mm * 0.9),
+    )
+    changes = sum(rank_rotations(shift).recommended.rotation != winner for shift in shifts)
+    expected = {0: "High", 1: "Medium"}.get(changes, "Low")
+    assert body["confidence"] == expected
 
 
 def test_a_cached_power_body_is_not_demo_data(monkeypatch):

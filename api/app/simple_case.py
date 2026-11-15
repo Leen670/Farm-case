@@ -19,6 +19,7 @@ def as_simple_case(case: CaseResponse, farmer_name: str) -> SimpleCase:
         recommended=_plan(case.recommended),
         alternatives=[_plan(plan) for plan in case.alternatives],
         demo_data=case.used_fallback,
+        confidence=case.confidence,
     )
 
 

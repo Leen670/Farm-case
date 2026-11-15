@@ -18,7 +18,7 @@ from app.explain import explain_plan
 from app.llm import polish_explanation
 from app.models import CaseRequest, CaseResponse, Clue, Plan
 from app.nasa_power import Climatology, PowerError
-from app.scoring import FarmConditions, ScoredRotation, rank_rotations
+from app.scoring import FarmConditions, ScoredRotation, confidence_label, rank_rotations
 
 # A pin this close to a saved demo farm may use that farm's fixture.
 FIXTURE_MATCH_DEGREES = 0.02
@@ -93,7 +93,9 @@ async def build_case(case: CaseRequest, *, day: date | datetime | None = None) -
     """
 
     climate, used_fallback = await load_climate(case.lat, case.lon)
-    recommendation = rank_rotations(_conditions(case, climate))
+    conditions = _conditions(case, climate)
+    recommendation = rank_rotations(conditions)
+    confidence = confidence_label(conditions, recommendation.recommended.rotation)
     when = day or date.today()
     clues = assemble_clues(case, climate, when)
     explanation, evidence = explain_plan(
@@ -119,6 +121,7 @@ async def build_case(case: CaseRequest, *, day: date | datetime | None = None) -
         explanation=explanation,
         evidence=evidence,
         used_fallback=used_fallback,
+        confidence=confidence,
     )
 
 

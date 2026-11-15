@@ -74,6 +74,9 @@ class CaseResponse(BaseModel):
     explanation: str
     evidence: list[Evidence]
     used_fallback: bool
+    # High: the top rotation survived every small climate nudge.
+    # Medium: it changed once. Low: it changed more than once.
+    confidence: Literal["High", "Medium", "Low"]
 
 
 class SimpleClue(BaseModel):
@@ -106,6 +109,7 @@ class SimpleCase(BaseModel):
     recommended: SimplePlan
     alternatives: list[SimplePlan]
     demo_data: bool
+    confidence: Literal["High", "Medium", "Low"]
 
 
 class WorldMap(BaseModel):

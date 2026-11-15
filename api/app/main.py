@@ -110,6 +110,8 @@ async def post_case(case: CaseRequest) -> CaseResponse:
 
     The scorer picks the crops. The explanation only describes that result.
     used_fallback is true only when POWER did not answer and a demo fixture was used.
+    confidence is High when that rotation survives 1°C and 10% rain either way,
+    Medium when it changes once, and Low when it changes more than once.
     """
 
     try:
