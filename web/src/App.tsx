@@ -1,6 +1,7 @@
 import { GameProvider, useGame } from "./state/game";
 import { Shell } from "./components/Shell";
 import { Welcome } from "./pages/Welcome";
+import { FarmerProfile } from "./pages/FarmerProfile";
 
 export function App() {
   return (
@@ -21,7 +22,7 @@ function Stage() {
   }
   return (
     <Shell>
-      <p className="text-2xl font-extrabold text-navy">Farm Case</p>
+      {screen === "farmer" && <FarmerProfile />}
     </Shell>
   );
 }
