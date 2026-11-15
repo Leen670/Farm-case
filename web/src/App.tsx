@@ -4,6 +4,7 @@ import { Welcome } from "./pages/Welcome";
 import { FarmerProfile } from "./pages/FarmerProfile";
 import { FarmMap } from "./pages/FarmMap";
 import { EvidenceBoard } from "./pages/EvidenceBoard";
+import { Investigation } from "./pages/Investigation";
 
 export function App() {
   return (
@@ -22,11 +23,13 @@ function Stage() {
       </Shell>
     );
   }
+  const dark = screen === "investigation";
   return (
-    <Shell>
+    <Shell tone={dark ? "dark" : "cream"}>
       {screen === "farmer" && <FarmerProfile />}
       {screen === "map" && <FarmMap />}
       {screen === "board" && <EvidenceBoard />}
+      {screen === "investigation" && <Investigation />}
     </Shell>
   );
 }
