@@ -1,0 +1,150 @@
+{
+  "zenodo_record": 10251170,
+  "bytes": 85689847,
+  "points": 113892,
+  "named": 46288,
+  "farms": {
+    "Iowa": {
+      "within_50km": [
+        {
+          "km": 13.8,
+          "is_crop": true,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        },
+        {
+          "km": 31.8,
+          "is_crop": true,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        },
+        {
+          "km": 42.9,
+          "is_crop": true,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        },
+        {
+          "km": 48.2,
+          "is_crop": true,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        }
+      ],
+      "nearest_named": {
+        "km": 721.6,
+        "label": "oats",
+        "dataset": "canada",
+        "collection_date": "2017-07-18"
+      }
+    },
+    "Punjab": {
+      "within_50km": [
+        {
+          "km": 11.2,
+          "is_crop": true,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        },
+        {
+          "km": 38.6,
+          "is_crop": true,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        },
+        {
+          "km": 39.7,
+          "is_crop": true,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        },
+        {
+          "km": 40.1,
+          "is_crop": true,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        }
+      ],
+      "nearest_named": {
+        "km": 997.0,
+        "label": "alfalfa",
+        "dataset": "central-asia",
+        "collection_date": "2016-05-21"
+      }
+    },
+    "Andalusia": {
+      "within_50km": [
+        {
+          "km": 8.5,
+          "is_crop": false,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        },
+        {
+          "km": 15.0,
+          "is_crop": true,
+          "label": null,
+          "dataset": "croplands",
+          "collection_date": "2021-04-29"
+        },
+        {
+          "km": 22.9,
+          "is_crop": true,
+          "label": null,
+          "dataset": "croplands",
+          "collection_date": "2021-04-29"
+        },
+        {
+          "km": 38.7,
+          "is_crop": true,
+          "label": null,
+          "dataset": "croplands",
+          "collection_date": "2021-04-29"
+        },
+        {
+          "km": 44.9,
+          "is_crop": true,
+          "label": null,
+          "dataset": "croplands",
+          "collection_date": "2021-04-29"
+        },
+        {
+          "km": 47.2,
+          "is_crop": true,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        },
+        {
+          "km": 47.3,
+          "is_crop": false,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        },
+        {
+          "km": 47.6,
+          "is_crop": true,
+          "label": null,
+          "dataset": "geowiki-landcover-2017",
+          "collection_date": "2016-09-30"
+        }
+      ],
+      "nearest_named": {
+        "km": 1198.5,
+        "label": "wheat",
+        "dataset": "croplands",
+        "collection_date": "2021-04-29"
+      }
+    }
+  }
+}

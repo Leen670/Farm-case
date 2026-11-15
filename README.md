@@ -105,7 +105,25 @@ On the three demo farms the closest crop is the same in the 2001–2025 climatol
 
 Iowa's bean starts in May. The game's barley plan does not, because the game still scores summer crops on the hottest-month extreme. These are two different answers on purpose.
 
-Still not run: checking those names against [CropHarvest](https://github.com/nasaharvest/cropharvest) labels, and classifying the satellite picture with Prithvi-EO. Both need data and weights this project does not ship, and the API does not invent either result.
+### CropHarvest labels
+
+The [CropHarvest](https://github.com/nasaharvest/cropharvest) library pins Zenodo record 10251170. That record's `labels.geojson` is 85,689,847 bytes: 113,893 points, each a location, a crop name when one was collected, and a date. The satellite archive beside it, `eo_data.tar.gz`, is 26.7 GB and was not downloaded. A download that is not named `labels.geojson`, or is over 100 MB, is refused.
+
+Within 50 km of each demo pin the points are from `geowiki-landcover-2017`. They say whether the land is cropland. They do not name the crop.
+
+| Farm | Points within 50 km | Marked cropland | Nearest named crop |
+| --- | --- | --- | --- |
+| Ames, Iowa | 4 | 4 | oats, 722 km away, in the Canada set |
+| Ludhiana, Punjab | 4 | 4 | alfalfa, 997 km away, in the Central Asia set |
+| Córdoba, Andalusia | 8 | 6 | wheat, 1,199 km away |
+
+A name that far away is a different landscape, so it is not used to check the rotation. The three pins are recorded as cropland. The dataset does not say which crop was growing there.
+
+Of the 15 crops in the game, the labels file has a matching name for each except chickpea. Faba bean is stored as `fababeans` (48 points).
+
+### Prithvi
+
+[Prithvi-EO 1.0, the 100M crop-classification weights](https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-1.0-100M-multi-temporal-crop-classification), was fine-tuned on US crop images and needs a GPU plus HLS imagery. That classification is not run here. The paper is [arXiv:2310.18660](https://arxiv.org/pdf/2310.18660v1.pdf).
 
 ## Run it locally
 

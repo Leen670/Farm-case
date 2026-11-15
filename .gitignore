@@ -11,6 +11,10 @@ __pycache__/
 # POWER responses saved while the API is running. The demo farms live in api/fixtures.
 api/.power_cache/
 
+# CropHarvest labels.geojson is about 86 MB. The satellite arrays are tens of GB
+# and are never downloaded. A small nearby-label extract lives in api/fixtures.
+api/data/cropharvest/
+
 # Web app build output
 web/node_modules/
 web/dist/
