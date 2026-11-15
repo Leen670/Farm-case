@@ -109,7 +109,7 @@ async def post_case(case: CaseRequest) -> CaseResponse:
     """The ranked rotation for this farm, plus the four clues behind it.
 
     The scorer picks the crops. The explanation only describes that result.
-    used_fallback is true when the climate numbers came from a saved response.
+    used_fallback is true only when POWER did not answer and a demo fixture was used.
     """
 
     try:
@@ -123,8 +123,8 @@ async def post_case_simple(case: CaseRequest) -> SimpleCase:
     """The same case, flattened for Unity's JsonUtility.
 
     Four clues, one recommended plan, and two alternatives. Strings are
-    empty rather than null. demo_data is true when the climate came from
-    a saved POWER response.
+    empty rather than null. demo_data is true when POWER did not answer
+    and a demo fixture supplied the climate.
     """
 
     try:

@@ -114,7 +114,7 @@ export function FarmerProfile() {
               className="absolute top-3 right-4 flex h-12 w-24 flex-col items-center justify-center bg-contain bg-center bg-no-repeat"
               style={{ backgroundImage: `url("${art("Aged Torn Paper Scrap.png")}")` }}
             >
-              <p className="text-[10px] font-extrabold text-[#3a3228]">Step 1 of 5</p>
+              <p className="text-[10px] font-extrabold text-[#3a3228]">Step 1 of 4</p>
               <span className="mt-0.5 flex gap-1" aria-hidden="true">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#2f8a34]" />
                 <span className="h-1.5 w-1.5 rounded-full bg-[#d9d0c0]" />

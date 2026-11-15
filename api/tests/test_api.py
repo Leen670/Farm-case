@@ -127,6 +127,17 @@ def test_case_ranks_from_the_fixture_and_flags_it(monkeypatch):
     assert len(body["clues"]) == 4
 
 
+def test_a_cached_power_body_is_not_demo_data(monkeypatch):
+    """The clue request stores POWER. Scoring that same pin is still real data."""
+
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    monkeypatch.setattr(nasa_power.cache, "get", lambda lat, lon: payload)
+    response = TestClient(app).post("/api/case", json=IOWA)
+    assert response.status_code == 200
+    assert response.json()["used_fallback"] is False
+    assert "saved POWER response" not in response.json()["explanation"]
+
+
 def test_a_fresh_power_response_is_not_a_fallback(monkeypatch):
     payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
     monkeypatch.setattr(nasa_power.cache, "get", lambda lat, lon: None)

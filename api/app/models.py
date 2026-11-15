@@ -98,7 +98,7 @@ class SimpleCase(BaseModel):
     """The case as Kadi's Unity screens read it.
 
     JsonUtility needs public fields, JSON arrays, and no nulls. demo_data
-    is true when the climate numbers came from a saved POWER response.
+    is true when POWER did not answer and a demo fixture supplied the climate.
     """
 
     title: str

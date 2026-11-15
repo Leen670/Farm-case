@@ -33,18 +33,12 @@ class ClimateUnavailable(RuntimeError):
 
 
 async def load_climate(lat: float, lon: float) -> tuple[Climatology, bool]:
-    """POWER for this pin. The bool is true when the body was already saved.
+    """POWER for this pin. The bool is true only when POWER did not answer.
 
-    Saved means the 0.5 degree cache or, if POWER cannot be reached, the
-    fixture for a demo farm. A fresh download is false.
+    The 0.5 degree cache is still NASA's download, including the copy the
+    clue request just stored. It is not demo data. The bool is true only
+    when POWER cannot be reached and a demo farm's saved fixture is used.
     """
-
-    cached = nasa_power.cache.get(lat, lon)
-    if cached is not None:
-        try:
-            return nasa_power.parse_climatology(cached), True
-        except (PowerError, KeyError, TypeError, ValueError):
-            pass
 
     try:
         payload = await nasa_power.fetch_climatology(lat, lon)
