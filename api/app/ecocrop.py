@@ -69,6 +69,12 @@ class EcoCrop:
     # temperature or rain score.
     ph_min: float | None = None
     ph_max: float | None = None
+    # Crop cycle, in days. None when the cell was blank. The monthly
+    # search uses the midpoint as the length of the growing window.
+    cycle_min_days: float | None = None
+    cycle_max_days: float | None = None
+    # EcoCrop use-categories, lower case, split on commas.
+    categories: tuple[str, ...] = ()
 
     def temperature(self, celsius: float) -> float:
         """Suitability of one air temperature, in degrees Celsius."""
@@ -107,6 +113,10 @@ def _common_names(text: str) -> tuple[str, ...]:
     return tuple(part.strip().lower() for part in text.split(",") if part.strip())
 
 
+def _categories(text: str) -> tuple[str, ...]:
+    return tuple(part.strip().lower() for part in text.split(",") if part.strip())
+
+
 @cache
 def load_crops() -> tuple[EcoCrop, ...]:
     """One crop per scientific name, with a complete temperature and rain range.
@@ -142,6 +152,9 @@ def load_crops() -> tuple[EcoCrop, ...]:
                 rain_max=rmax,
                 ph_min=_number(row, "PHMIN"),
                 ph_max=_number(row, "PHMAX"),
+                cycle_min_days=_number(row, "GMIN"),
+                cycle_max_days=_number(row, "GMAX"),
+                categories=_categories(row.get("CAT") or ""),
             )
     return tuple(kept.values())
 

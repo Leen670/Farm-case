@@ -89,12 +89,23 @@ High means the winner did not move. It does not mean a summer crop would thrive 
 
 ## Phase 2
 
-These are the next measurements, not results we have.
+`POST /api/windows` scores the EcoCrop table on each crop's own growing months. The 15-crop game is unchanged.
 
-- Search the full EcoCrop table, all 2,568 crops, with a rain and temperature window for each crop's growing months, instead of one yearly total and one hottest month.
-- Rank the same pin on a shifted climate and on the 2001–2020 climatology, and show where the rotation changes.
-- Check the recommended crops against [CropHarvest](https://github.com/nasaharvest/cropharvest) labels for that place.
-- Use Prithvi-EO to classify the crop in the satellite picture, instead of only displaying the NDVI image.
+A crop cycle of 150 days is judged on a five-month window, slid around the year. Rain limits in EcoCrop are for a full year, so they are scaled down to the length of that window. The score is the worse of temperature and rain. Crops that tie are ordered by how close the window sits to the middle of the optimum.
+
+The file has 2,568 species. This search keeps the ones EcoCrop marks as a cereal, pulse, vegetable, root, fruit, forage, or fibre. Forest, ornamentals, weeds, and medicinals stay in the file. The parent row for maize has a blank category, so the search uses `Zea mays ssp. mays`.
+
+On the three demo farms the closest crop is the same in the 2001–2025 climatology and in the monthly average for 2001–2020:
+
+| Farm | Closest crop | 2001–2020 leader changed |
+| --- | --- | --- |
+| Ames, Iowa | common bean | no |
+| Ludhiana, Punjab | black-eyed pea | no |
+| Córdoba, Andalusia | garden burnet | no |
+
+Iowa's bean starts in May. The game's barley plan does not, because the game still scores summer crops on the hottest-month extreme. These are two different answers on purpose.
+
+Still not run: checking those names against [CropHarvest](https://github.com/nasaharvest/cropharvest) labels, and classifying the satellite picture with Prithvi-EO. Both need data and weights this project does not ship, and the API does not invent either result.
 
 ## Run it locally
 

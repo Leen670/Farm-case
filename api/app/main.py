@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
-from app.analysis import ClimateUnavailable, build_case, build_clues
+from app.analysis import ClimateUnavailable, build_case, build_clues, load_climatology_body
 from app.assistant import allow_question, answer_question
 from app.gibs import WORLD_HEIGHT, WORLD_WIDTH, world_map_url
 from app.images import GibsUrlError, ImageFetchError, fetch_gibs_image
@@ -26,9 +26,12 @@ from app.models import (
     CaseResponse,
     CluesResponse,
     SimpleCase,
+    WindowQuery,
+    WindowReport,
     WorldMap,
 )
 from app.simple_case import as_simple_case
+from app.windows import earlier_climate, from_climatology, leader_changed, rank_windows
 
 load_local_env()
 
@@ -90,6 +93,40 @@ app.add_middleware(
 def health() -> dict[str, bool]:
     """Lets us confirm the API is up and wake a sleeping host before a demo."""
     return {"ok": True}
+
+
+@app.post("/api/windows", response_model=WindowReport)
+async def post_windows(query: WindowQuery) -> WindowReport:
+    """The wider EcoCrop search for this pin.
+
+    Every crop with a published temperature and rain range is scored on its
+    own growing months. The 15-crop rotation is not changed. A demo pin also
+    compares that leader with the saved 2001–2020 monthly normals.
+    """
+
+    try:
+        payload = await load_climatology_body(query.lat, query.lon)
+    except ClimateUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    current = from_climatology(payload)
+    earlier = earlier_climate(query.lat, query.lon)
+    return WindowReport(
+        period=current.period,
+        top=[_window_crop(item) for item in rank_windows(current)],
+        earlier_period=None if earlier is None else earlier.period,
+        earlier_top=[] if earlier is None else [_window_crop(item) for item in rank_windows(earlier)],
+        leader_changed=None if earlier is None else leader_changed(current, earlier),
+    )
+
+
+def _window_crop(item) -> dict:
+    return {
+        "scientific_name": item.scientific_name,
+        "common_name": item.common_name,
+        "score": int(round(item.score * 100)),
+        "start_month": item.start_month,
+        "length_months": item.length_months,
+    }
 
 
 @app.post("/api/clues", response_model=CluesResponse)

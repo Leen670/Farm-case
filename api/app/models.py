@@ -151,3 +151,33 @@ class AssistantReply(BaseModel):
     """One short answer for the chat box."""
 
     answer: str
+
+
+class WindowQuery(BaseModel):
+    """A pin for the wider EcoCrop search. This does not score the 15-crop game."""
+
+    lat: float
+    lon: float
+
+
+class WindowCrop(BaseModel):
+    """One species at its best run of growing months."""
+
+    scientific_name: str
+    common_name: str
+    score: int
+    start_month: str
+    length_months: int
+
+
+class WindowReport(BaseModel):
+    """The top of the full EcoCrop table, and the 2001–2020 top when we have it.
+
+    leader_changed is null when this pin has no saved 2001–2020 baseline.
+    """
+
+    period: str
+    top: list[WindowCrop]
+    earlier_period: str | None = None
+    earlier_top: list[WindowCrop] = []
+    leader_changed: bool | None = None

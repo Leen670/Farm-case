@@ -32,6 +32,20 @@ class ClimateUnavailable(RuntimeError):
     """POWER did not answer, and this pin has no saved fixture."""
 
 
+async def load_climatology_body(lat: float, lon: float) -> dict:
+    """The raw POWER body, or a demo fixture when POWER does not answer."""
+
+    try:
+        return await nasa_power.fetch_climatology(lat, lon)
+    except (httpx.HTTPError, PowerError, KeyError, TypeError, ValueError):
+        payload = _demo_fixture(lat, lon)
+        if payload is None:
+            raise ClimateUnavailable(
+                "NASA POWER did not answer, and this pin has no saved fixture."
+            ) from None
+        return payload
+
+
 async def load_climate(lat: float, lon: float) -> tuple[Climatology, bool]:
     """POWER for this pin. The bool is true only when POWER did not answer.
 
