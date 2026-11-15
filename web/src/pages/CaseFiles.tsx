@@ -3,7 +3,7 @@ import { titleCase } from "../data/farms";
 import { useGame } from "../state/game";
 
 function art(file: string): string {
-  return `/images/${encodeURIComponent(file)}`;
+  return `${import.meta.env.BASE_URL}images/${encodeURIComponent(file)}`;
 }
 
 const STEPS = [

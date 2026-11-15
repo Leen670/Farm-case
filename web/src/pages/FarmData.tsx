@@ -4,7 +4,7 @@ import { useGame } from "../state/game";
 import { clueTitle, clueValue } from "./clueText";
 
 function art(file: string): string {
-  return `/images/${encodeURIComponent(file)}`;
+  return `${import.meta.env.BASE_URL}images/${encodeURIComponent(file)}`;
 }
 
 const STEPS = [

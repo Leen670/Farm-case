@@ -6,7 +6,7 @@ import { useGame } from "../state/game";
 import type { Priority, Soil, WaterLevel, WaterSource } from "../types/api";
 
 function art(file: string): string {
-  return `/images/${encodeURIComponent(file)}`;
+  return `${import.meta.env.BASE_URL}images/${encodeURIComponent(file)}`;
 }
 
 const SOIL_CARDS: { value: Soil; label: string; image: string }[] = [

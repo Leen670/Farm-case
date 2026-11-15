@@ -1,8 +1,10 @@
-# Render blueprint for the Farm Case API.
-# No database. The service is a Python process: NASA POWER, GIBS links,
-# and the crop ranker. Demo-farm fixtures ship in the repo.
+# Render blueprint for Farm Case.
+# The API is a Python process: NASA POWER, GIBS links, and the crop ranker.
+# No database. Demo-farm fixtures ship in the repo.
 # The 0.5 degree POWER cache lives on the instance disk and disappears
 # on the next deploy, which is fine. A missed cache calls POWER again.
+# The game is a Vite static site. It has no client router, so a refresh
+# stays on / and does not need a rewrite to index.html.
 
 services:
   - type: web
@@ -20,7 +22,22 @@ services:
       - key: PYTHON_VERSION
         value: "3.12.7"
       # Comma-separated extra origins. The code also allows localhost,
-      # html-classic.itch.zone, html.itch.zone, any *.itch.io page, and
-      # any *.vercel.app site. Replace * with the real site later.
+      # html-classic.itch.zone, html.itch.zone, any *.itch.io page,
+      # any *.vercel.app site, and any *.onrender.com site.
       - key: CORS_ORIGINS
-        value: "http://localhost:5173,http://127.0.0.1:5173"
+        value: "http://localhost:5173,http://127.0.0.1:5173,https://farm-case-web.onrender.com"
+
+  # Vite bakes VITE_API_URL into the bundle at build time.
+  - type: web
+    name: farm-case-web
+    runtime: static
+    branch: main
+    rootDir: web
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22.14.0"
+      - key: VITE_API_URL
+        value: https://farm-case-api.onrender.com

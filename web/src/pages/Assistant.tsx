@@ -4,7 +4,7 @@ import { BackButton } from "../components/BackButton";
 import { useGame } from "../state/game";
 
 function art(file: string): string {
-  return `/images/${encodeURIComponent(file)}`;
+  return `${import.meta.env.BASE_URL}images/${encodeURIComponent(file)}`;
 }
 
 const STEPS = [

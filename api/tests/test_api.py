@@ -50,8 +50,10 @@ def test_cors_keeps_local_dev_and_any_vercel_site(monkeypatch):
     assert pattern == BROWSER_ORIGIN_PATTERN
     assert re.fullmatch(pattern, "https://kadi.itch.io")
     assert re.fullmatch(pattern, "https://farm-case.vercel.app")
+    assert re.fullmatch(pattern, "https://farm-case-web.onrender.com")
     assert re.fullmatch(pattern, "https://evil.example") is None
     assert re.fullmatch(pattern, "https://evilitch.io") is None
+    assert re.fullmatch(pattern, "https://evil.onrender.com.evil.com") is None
 
 
 def test_docs_list_both_posts():

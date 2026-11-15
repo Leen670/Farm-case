@@ -24,7 +24,7 @@ export function Welcome() {
         <video
           ref={loopRef}
           className="h-full w-full object-cover"
-          src="/backgrounds/farm_case_loop.mp4"
+          src={`${import.meta.env.BASE_URL}backgrounds/farm_case_loop.mp4`}
           loop
           muted
           playsInline
@@ -33,7 +33,7 @@ export function Welcome() {
         {!showMenu && (
           <video
             className="absolute inset-0 z-20 h-full w-full object-cover"
-            src="/backgrounds/farm_case_cinematic_intro_short.mp4"
+            src={`${import.meta.env.BASE_URL}backgrounds/farm_case_cinematic_intro_short.mp4`}
             autoPlay
             muted
             playsInline

@@ -42,10 +42,14 @@ ITCH_ORIGINS = (
     "https://html-classic.itch.zone",
     "https://html.itch.zone",
 )
-# Any Vercel preview, any itch.io page, and any itch.zone embed host.
+# Any Vercel preview, any itch.io page, any itch.zone embed host,
+# and any Render static site (the live game is one of these).
 VERCEL_ORIGIN_PATTERN = r"https://.*\.vercel\.app"
 ITCH_ORIGIN_PATTERN = r"https://([a-z0-9-]+\.)*itch\.(io|zone)"
-BROWSER_ORIGIN_PATTERN = f"{VERCEL_ORIGIN_PATTERN}|{ITCH_ORIGIN_PATTERN}"
+RENDER_ORIGIN_PATTERN = r"https://.*\.onrender\.com"
+BROWSER_ORIGIN_PATTERN = (
+    f"{VERCEL_ORIGIN_PATTERN}|{ITCH_ORIGIN_PATTERN}|{RENDER_ORIGIN_PATTERN}"
+)
 
 
 def cors_settings() -> tuple[list[str], str | None]:
@@ -53,8 +57,8 @@ def cors_settings() -> tuple[list[str], str | None]:
 
     Unset or * leaves the demo open. There is no login cookie to protect.
     A list, set on Render as CORS_ORIGINS, names extra sites and still
-    allows localhost, the itch.io embed hosts, any *.itch.io page, and
-    any *.vercel.app site.
+    allows localhost, the itch.io embed hosts, any *.itch.io page,
+    any *.vercel.app site, and any *.onrender.com site.
     """
 
     raw = os.environ.get("CORS_ORIGINS", "*").strip()
