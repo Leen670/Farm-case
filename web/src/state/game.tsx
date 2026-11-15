@@ -9,7 +9,8 @@ export type Screen =
   | "investigation"
   | "results"
   | "files"
-  | "data";
+  | "data"
+  | "assistant";
 
 export type Draft = {
   farmerName: string;

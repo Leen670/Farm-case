@@ -8,6 +8,7 @@ import { Investigation } from "./pages/Investigation";
 import { Results } from "./pages/Results";
 import { CaseFiles } from "./pages/CaseFiles";
 import { FarmData } from "./pages/FarmData";
+import { Assistant } from "./pages/Assistant";
 
 export function App() {
   return (
@@ -19,13 +20,7 @@ export function App() {
 
 function Stage() {
   const { screen } = useGame();
-  if (screen === "welcome") {
-    return (
-      <Shell tone="hero">
-        <Welcome />
-      </Shell>
-    );
-  }
+  if (screen === "welcome") return <Welcome />;
   const dark = screen === "investigation";
   return (
     <Shell tone={dark ? "dark" : "cream"}>
@@ -36,6 +31,7 @@ function Stage() {
       {screen === "results" && <Results />}
       {screen === "files" && <CaseFiles />}
       {screen === "data" && <FarmData />}
+      {screen === "assistant" && <Assistant />}
     </Shell>
   );
 }

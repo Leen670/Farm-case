@@ -2,6 +2,7 @@
 
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-pixel: "Press Start 2P", ui-monospace, monospace;
   --color-navy: #071e36;
   --color-navy-deep: #04111f;
   --color-lime: #a6dc2c;
@@ -34,5 +35,84 @@ body {
 
   .eyebrow {
     @apply text-xs font-bold uppercase tracking-[0.16em] text-ink/50;
+  }
+
+  .pixel-btn {
+    font-family: var(--font-pixel);
+    display: block;
+    width: 100%;
+    padding: 0 0 3px;
+    border: 2px solid transparent;
+    border-radius: 0.55rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .pixel-btn:disabled {
+    cursor: not-allowed;
+    filter: grayscale(0.35);
+  }
+
+  .pixel-btn:active:not(:disabled) {
+    transform: translateY(3px);
+    padding-bottom: 2px;
+  }
+
+  .pixel-btn-green {
+    color: white;
+    background: #1d5a0c;
+    border-color: #102806;
+  }
+
+  .pixel-btn-cream {
+    color: #3a2612;
+    background: #6a5d45;
+    border-color: #8d7b58;
+  }
+
+  .pixel-btn-rim {
+    display: block;
+    border-radius: 0.4rem;
+    padding: 2px;
+  }
+
+  .pixel-btn-green .pixel-btn-rim {
+    background: #e4f56a;
+  }
+
+  .pixel-btn-cream .pixel-btn-rim {
+    background: #ecd7aa;
+  }
+
+  .pixel-btn-face {
+    display: flex;
+    min-height: 2.55rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border-radius: 0.28rem;
+    padding-inline: 0.55rem;
+    font-size: 0.52rem;
+    text-align: center;
+  }
+
+  .pixel-btn-green .pixel-btn-face {
+    background: linear-gradient(#74c236 0 48%, #3d9014 48% 100%);
+  }
+
+  .pixel-btn-cream .pixel-btn-face {
+    background: #f6e6c6;
+  }
+
+  .pixel-btn-green:hover .pixel-btn-face {
+    background: linear-gradient(#86d246 0 48%, #49a018 48% 100%);
+  }
+
+  .pixel-btn-cream:hover .pixel-btn-face {
+    background: #faecd2;
+  }
+
+  .pixel-btn-label {
+    text-align: center;
   }
 }
