@@ -2,6 +2,7 @@ import { GameProvider, useGame } from "./state/game";
 import { Shell } from "./components/Shell";
 import { Welcome } from "./pages/Welcome";
 import { FarmerProfile } from "./pages/FarmerProfile";
+import { FarmMap } from "./pages/FarmMap";
 
 export function App() {
   return (
@@ -23,6 +24,7 @@ function Stage() {
   return (
     <Shell>
       {screen === "farmer" && <FarmerProfile />}
+      {screen === "map" && <FarmMap />}
     </Shell>
   );
 }
