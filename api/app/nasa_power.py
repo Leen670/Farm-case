@@ -133,7 +133,7 @@ async def fetch_climatology(
     """
     store = cache if store is None else store
     cached = store.get(lat, lon)
-    if cached is not None:
+    if cached is not None and _usable(cached):
         return cached
 
     owns_client = client is None
@@ -162,6 +162,8 @@ async def fetch_climatology(
     missing = [name for name in PARAMETERS if name not in payload.get("properties", {}).get("parameter", {})]
     if missing:
         raise PowerError(f"POWER response is missing {', '.join(missing)}")
+    if not _usable(payload):
+        raise PowerError("POWER has no climate values for this point")
     store.put(lat, lon, payload)
     return payload
 
@@ -207,6 +209,16 @@ def rain_mm_per_year(monthly_mm_per_day: dict[str, float]) -> float:
     """Turn twelve daily rates into a 365-day total."""
     total = sum(monthly_mm_per_day[month] * DAYS_IN_MONTH[month] for month in MONTHS)
     return round(total, 2)
+
+
+def _usable(payload: dict) -> bool:
+    """True when the body has real climate numbers, not POWER's fill value."""
+
+    try:
+        parse_climatology(payload)
+    except (PowerError, KeyError, TypeError, ValueError):
+        return False
+    return True
 
 
 def parse_climatology(payload: dict) -> Climatology:

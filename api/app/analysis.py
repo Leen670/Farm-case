@@ -41,19 +41,21 @@ async def load_climate(lat: float, lon: float) -> tuple[Climatology, bool]:
 
     cached = nasa_power.cache.get(lat, lon)
     if cached is not None:
-        return nasa_power.parse_climatology(cached), True
+        try:
+            return nasa_power.parse_climatology(cached), True
+        except (PowerError, KeyError, TypeError, ValueError):
+            pass
 
     try:
         payload = await nasa_power.fetch_climatology(lat, lon)
-    except (httpx.HTTPError, PowerError, ValueError):
+        return nasa_power.parse_climatology(payload), False
+    except (httpx.HTTPError, PowerError, KeyError, TypeError, ValueError):
         payload = _demo_fixture(lat, lon)
         if payload is None:
             raise ClimateUnavailable(
                 "NASA POWER did not answer, and this pin has no saved fixture."
             ) from None
         return nasa_power.parse_climatology(payload), True
-
-    return nasa_power.parse_climatology(payload), False
 
 
 def _demo_fixture(lat: float, lon: float) -> dict | None:

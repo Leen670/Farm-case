@@ -182,6 +182,25 @@ def test_docs_list_the_unity_route():
     assert "get" in schema["paths"]["/api/image"]
 
 
+def test_a_fill_value_pin_is_unavailable_instead_of_crashing(monkeypatch):
+    fill = {
+        "properties": {"parameter": {}},
+        "geometry": {"coordinates": [0, 0, 0]},
+        "header": {"range": ""},
+    }
+    monkeypatch.setattr(nasa_power.cache, "get", lambda lat, lon: fill)
+
+    async def boom(*args, **kwargs):
+        raise httpx.ConnectError("offline")
+
+    monkeypatch.setattr(nasa_power, "fetch_climatology", boom)
+    body = dict(IOWA)
+    body["lat"] = 0
+    body["lon"] = 0
+    response = TestClient(app).post("/api/case/simple", json=body)
+    assert response.status_code == 503
+
+
 def test_an_unsaved_pin_is_unavailable_when_power_is_down(monkeypatch):
     client = _offline(monkeypatch)
     body = dict(IOWA)
