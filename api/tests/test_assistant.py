@@ -102,7 +102,7 @@ def test_history_goes_with_the_follow_up(monkeypatch):
         assert "Maize then beans." in user
         assert max_output_tokens == 300
         assert timeout == 10.0
-        return "Year 1 maize draws nitrogen down."
+        return "Maize draws nitrogen down."
 
     monkeypatch.setattr("app.assistant.gemini_reply", fake)
     response = TestClient(app).post(
@@ -119,6 +119,20 @@ def test_history_goes_with_the_follow_up(monkeypatch):
     )
     assert response.status_code == 200
     assert "nitrogen" in response.json()["answer"]
+
+
+def test_a_made_up_crop_or_number_uses_the_prepared_answer(monkeypatch):
+    reset_rate_limit()
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+
+    async def fake(system, user, *, max_output_tokens, timeout):
+        return "Alfalfa would use 900 mm and do better here."
+
+    monkeypatch.setattr("app.assistant.gemini_reply", fake)
+    answer = _ask(TestClient(app), "How is the water?", ip="203.0.113.14").json()["answer"]
+    assert "900" not in answer
+    assert "alfalfa" not in answer.casefold()
+    assert "limited water" in answer
 
 
 def test_the_twenty_first_question_waits(monkeypatch):

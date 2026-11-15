@@ -11,7 +11,7 @@ import json
 import time
 from collections import defaultdict, deque
 
-from app.llm import gemini_reply
+from app.llm import gemini_reply, grounded_in_case
 
 LIMIT = 20
 WINDOW_SECONDS = 60.0
@@ -74,10 +74,12 @@ async def answer_question(case: dict, question: str, history: list | None = None
         )
     except Exception:
         return canned_answer(case, asked)
-    cleaned = reply.strip()
-    if not cleaned:
+    cleaned = reply.strip()[:1200]
+    # The same rule as the results paragraph: a crop or a number that is not
+    # in the case is replaced by the prepared answer.
+    if not cleaned or not grounded_in_case(cleaned, _slim(case)):
         return canned_answer(case, asked)
-    return cleaned[:1200]
+    return cleaned
 
 
 def canned_answer(case: dict, question: str) -> str:

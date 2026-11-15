@@ -94,20 +94,26 @@ async def build_case(case: CaseRequest, *, day: date | datetime | None = None) -
 
     climate, used_fallback = await load_climate(case.lat, case.lon)
     recommendation = rank_rotations(_conditions(case, climate))
+    when = day or date.today()
+    clues = assemble_clues(case, climate, when)
     explanation, evidence = explain_plan(
         case,
         recommendation.recommended,
         climate,
         used_fallback=used_fallback,
     )
+    # The model sees this JSON and nothing else. The check after the reply
+    # uses the same object, so a number has to be one the player can see.
+    facts = _case_facts(case.farmer_name, recommendation, evidence, clues)
     explanation = await polish_explanation(
         explanation,
         case.farmer_name,
         recommendation.recommended.rotation,
+        facts,
     )
     return CaseResponse(
         case_id=uuid.uuid4().hex,
-        clues=assemble_clues(case, climate, day or date.today()),
+        clues=clues,
         recommended=_plan(recommendation.recommended),
         alternatives=[_plan(item) for item in recommendation.alternatives],
         explanation=explanation,
@@ -127,6 +133,28 @@ def _conditions(case: CaseRequest, climate: Climatology) -> FarmConditions:
         previous_crops=tuple(case.previous_crops),
         priorities=tuple(case.priorities),
     )
+
+
+def _case_facts(farmer_name: str, recommendation, evidence, clues) -> dict:
+    """The crops and numbers the results paragraph is allowed to repeat."""
+
+    def plan(item) -> dict:
+        return {
+            "rotation": list(item.rotation),
+            "suitability": item.suitability,
+            "reasons": list(item.reasons),
+            "risks": list(item.risks),
+        }
+
+    return {
+        "farmer_name": farmer_name,
+        "clues": [{"title": clue.title, "summary": clue.summary} for clue in clues],
+        "recommended": plan(recommendation.recommended),
+        "alternatives": [plan(item) for item in recommendation.alternatives],
+        "evidence": [
+            {"label": row.label, "value": row.value, "unit": row.unit} for row in evidence
+        ],
+    }
 
 
 def _plan(scored: ScoredRotation) -> Plan:

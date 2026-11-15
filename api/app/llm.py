@@ -2,11 +2,13 @@
 
 The ranker has already chosen the crops and the numbers. Gemini may only
 rephrase that paragraph. A missing key, a network error, or a reply that
-adds a crop or a number all return the original paragraph.
+names a crop or a number the case JSON does not contain all return the
+original paragraph.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import re
 from pathlib import Path
@@ -22,7 +24,8 @@ TIMEOUT_SECONDS = 8.0
 _RULES = (
     "Rewrite the paragraph in plain sentences for a farm game. "
     "The crops and the numbers are already decided. "
-    "Keep every crop name and every number exactly. "
+    "Every crop name and every number in your reply must appear in the case JSON. "
+    "Drop a sentence rather than keep a number that is not in the case. "
     "Do not add a crop, a measurement, a place, or a reason. "
     "Reply with the paragraph only."
 )
@@ -55,6 +58,7 @@ async def polish_explanation(
     template: str,
     farmer_name: str,
     rotation: tuple[str, ...],
+    case: dict | None = None,
 ) -> str:
     """Return a rewritten paragraph, or the template when that is not safe."""
 
@@ -62,13 +66,28 @@ async def polish_explanation(
     if not key:
         return template
     try:
-        reply = await _call_gemini(key, template)
+        reply = await _call_gemini(key, template, case)
         cleaned = _plain_paragraph(reply)
-        if rewrite_is_faithful(cleaned, template, rotation, farmer_name):
+        if rewrite_is_faithful(cleaned, template, rotation, farmer_name, case):
             return cleaned
     except Exception:
         return template
     return template
+
+
+def grounded_in_case(text: str, case: object) -> bool:
+    """True when every crop name and every number in the text is in the case.
+
+    Picture links are not part of the case text. A link is full of coordinates,
+    and those are not measurements the assistant is allowed to invent from.
+    """
+
+    blob = case if isinstance(case, str) else json.dumps(case, ensure_ascii=False, default=str)
+    if _number_values(text) - _number_values(blob):
+        return False
+    if _mentioned_crops(text) - _mentioned_crops(blob):
+        return False
+    return True
 
 
 def rewrite_is_faithful(
@@ -76,19 +95,29 @@ def rewrite_is_faithful(
     template: str,
     rotation: tuple[str, ...],
     farmer_name: str,
+    case: dict | None = None,
 ) -> bool:
-    """True when the reply keeps this farmer, these crops, and these numbers."""
+    """True when the reply keeps this farmer, these crops, and these numbers.
+
+    With a case, the allowed crops and numbers are the ones written in that
+    JSON. Without one, they are the ones written in the template.
+    """
 
     if not rewrite or len(rewrite) > 2000 or "http" in rewrite.casefold():
         return False
     name = farmer_name.strip()
     if len(name) >= 2 and name.casefold() not in rewrite.casefold():
         return False
-    if _number_values(rewrite) - _number_values(template):
-        return False
     mentioned = _mentioned_crops(rewrite)
-    allowed = _mentioned_crops(template)
     planned = {crop.casefold() for crop in rotation}
+    if case is None:
+        if _number_values(rewrite) - _number_values(template):
+            return False
+        allowed = _mentioned_crops(template)
+    else:
+        if not grounded_in_case(rewrite, case):
+            return False
+        allowed = _mentioned_crops(json.dumps(case, ensure_ascii=False, default=str))
     if mentioned - allowed or not planned <= mentioned:
         return False
     return True
@@ -123,7 +152,14 @@ async def gemini_reply(
     return _reply_text(response.json())
 
 
-async def _call_gemini(key: str, template: str) -> str:
+async def _call_gemini(key: str, template: str, case: dict | None = None) -> str:
+    case_block = ""
+    if case is not None:
+        case_block = (
+            "Case JSON:\n"
+            + json.dumps(case, ensure_ascii=False, default=str)
+            + "\n\n"
+        )
     async with httpx.AsyncClient(timeout=TIMEOUT_SECONDS) as client:
         response = await client.post(
             ENDPOINT,
@@ -132,7 +168,9 @@ async def _call_gemini(key: str, template: str) -> str:
                 "contents": [
                     {
                         "role": "user",
-                        "parts": [{"text": f"{_RULES}\n\nParagraph:\n{template}"}],
+                        "parts": [
+                            {"text": f"{_RULES}\n\n{case_block}Paragraph:\n{template}"}
+                        ],
                     }
                 ],
                 "generationConfig": {"temperature": 0, "maxOutputTokens": 512},
